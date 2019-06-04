@@ -329,21 +329,18 @@
 
    TIME_END=$(( $(date -u +%s) - ${TIME_BEGIN} ))
 
-   printf "\n\n${bldred}\t _______  _______  _______  _______  _______ _________ _______ \n"
-   printf "\t(  ____ \(  ___  )(  ____ )(  ____ \(  ____ \\__   __/(  ___  )\n"
-   printf "\t| (    \/| (   ) || (    )|| (    \/| (    \/   ) (   | (   ) |\n"
-   printf "\t| (__    | |   | || (____)|| |      | (__       | |   | |   | |\n"
-   printf "\t|  __)   | |   | ||     __)| |      |  __)      | |   | |   | |\n"
-   printf "\t| (      | |   | || (\ (   | |      | (         | |   | |   | |\n"
-   printf "\t| )      | (___) || ) \ \__| (____/\| (____/\___) (___| (___) |\n"
-   printf "\t|/       (_______)|/   \__/(_______/(_______/\_______/(_______)\n${txtrst}"
+   printf "\n\n${bldred}\t   __________  ____  _______  __   ________   \n"
+   printf "\t  / ____/ __ \/ __ \/ ____/ |/ /  /  _/ __ \  \n"
+   printf "\t / /   / / / / / / / __/  |   /   / // / / /  \n"
+   printf "\t/ /___/ /_/ / /_/ / /___ /   |_ _/ // /_/ /   \n"
+   printf "\t\____/\____/_____/_____//_/|_(_)___/\____/    \n"
+   printf "\t                                              \n${txtrst}"
 
+   printf "\\n\\tCodex.IO has been successfully built. %02d:%02d:%02d\\n\\n" $(($TIME_END/3600)) $(($TIME_END%3600/60)) $(($TIME_END%60))
+   #printf "\\tTo verify your installation run the following commands:\\n"
 
-   printf "\\n\\tFORCEIO has been successfully built. %02d:%02d:%02d\\n\\n" $(($TIME_END/3600)) $(($TIME_END%3600/60)) $(($TIME_END%60))
-   printf "\\tTo verify your installation run the following commands:\\n"
-
-   print_instructions
+   #print_instructions
 
    printf "\\tFor more information:\\n"
-   printf "\\tFORCEIO website: https://open.eosforce.io/#/en \\n"
-   printf "\\tFORCEIO Telegram channel @ https://t.me/forceio \\n"
+   printf "\\tCodex.IO website: https://open.eosforce.io/\#/en \\n"
+   printf "\\tCodex.IO Telegram channel @ https://t.me/forceio \\n"

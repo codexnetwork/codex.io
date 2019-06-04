@@ -103,16 +103,13 @@ fi
    install_symlinks   
    create_cmake_symlink "eosio-config.cmake"
 
-   printf "\n\n${bldred}\t _______  _______  _______  _______  _______  _______  _______  _______ \n"
-   printf '\t(  ____ \(  ___  )(  ____ \(  ____ \(  ___  )(  ____ )(  ____ \(  ____ \ \n'
-   printf "\t| (    \/| (   ) || (    \/| (    \/| (   ) || (    )|| (    \/| (    \/ \n"
-   printf "\t| (__    | |   | || (_____ | (__    | |   | || (____)|| |      | (__     \n"
-   printf "\t|  __)   | |   | |(_____  )|  __)   | |   | ||     __)| |      |  __)    \n"
-   printf "\t| (      | |   | |      ) || (      | |   | || (\ (   | |      | (       \n"
-   printf "\t| (____/\| (___) |/\____) || )      | (___) || ) \ \__| (____/\| (____/\ \n"
-   printf "\t(_______/(_______)\_______)|/       (_______)|/   \__/(_______/(_______/ \n${txtrst}"
+   printf "\n\n${bldred}\t   __________  ____  _______  __   ________   \n"
+   printf "\t  / ____/ __ \/ __ \/ ____/ |/ /  /  _/ __ \  \n"
+   printf "\t / /   / / / / / / / __/  |   /   / // / / /  \n"
+   printf "\t/ /___/ /_/ / /_/ / /___ /   |_ _/ // /_/ /   \n"
+   printf "\t\____/\____/_____/_____//_/|_(_)___/\____/    \n"
+   printf "\t                                              \n${txtrst}"
 
    printf "\\tFor more information:\\n"
-   printf "\\tEOSForce website: https://www.eosforce.io\\n"
-   printf "\\tEOSForce Telegram channel @ https://t.me/eosforce_en\\n"
-   printf "\\tEOSForce wiki: https://eosforce.github.io/Documentation/\\n\\n\\n"
+   printf "\\tCodex.IO website: https://open.eosforce.io/\#/en \\n"
+   printf "\\tCodex.IO Telegram channel @ https://t.me/forceio \\n"

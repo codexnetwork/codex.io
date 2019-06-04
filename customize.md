@@ -1,8 +1,8 @@
-# Customize FORCEIO
+# Customize CODEX.IO
 
 
-FORCEIO is a high customizable blockchain frame base on EOSIO, 
-This Document introduction how to customize FORCEIO to start a chain to solve special requirement from users. 
+CODEX.IO is a high customizable blockchain frame base on EOSIO, 
+This Document introduction how to customize CODEX.IO to start a chain to solve special requirement from users. 
 
 ## 0. Build Params
 
@@ -22,7 +22,7 @@ and in EOSForce, `MAX_PRODUCERS` is 23, `BLOCK_INTERVAL_MS` is 3000 and `PRODUCE
 
 ### 0.2 Main Symbol
 
-FORCEIO support user to customize most symbols in chain.
+CODEX.IO support user to customize most symbols in chain.
 
 **Core token symbol**
 
@@ -30,7 +30,7 @@ Like EOSIO, user can set `CORE_SYMBOL_NAME` or use "-s" to set core token symbol
 
 **User 's publish/privte key format**
 
-FORCEIO support two key format: legacy format with chain symbol prefix and common format for all chain base on EOSIO.
+CODEX.IO support two key format: legacy format with chain symbol prefix and common format for all chain base on EOSIO.
 
 chain developer can use legacy format with set `USE_PUB_KEY_LEGACY_PREFIX` to 1 or to use common format with set `USE_PUB_KEY_LEGACY_PREFIX` to 0.
 
@@ -53,7 +53,7 @@ For user's chain, we need set some params in genesis data.
 
 ### 0.5 Resource Model
 
-FORCEIO allow chain developer to select the resource model to the chain.
+CODEX.IO allow chain developer to select the resource model to the chain.
 
 There is three resource in chain: cpu,net and ram. developer can set `RESOURCE_MODEL` to select the model they need.
 
@@ -69,7 +69,7 @@ TODO
 
 ### 0.6 Vote
 
-FORCEIO support chain developer to select the way to vote on the chain.
+CODEX.IO support chain developer to select the way to vote on the chain.
 
 - `FROZEN_DELAY` user token stake forzen delay block num, default is 3 * 24 * 60 * 20
 
@@ -81,7 +81,7 @@ developer can set `USE_BONUS_TO_VOTE` to 1 or 0 to select if send bonus token to
 
 ## 1. Native Contract
 
-FORCEIO support chain developer to create contract in navtive layer, it can run more fast then contract in wasm.
+CODEX.IO support chain developer to create contract in navtive layer, it can run more fast then contract in wasm.
 
 ## 2. Plugins
 

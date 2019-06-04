@@ -26,7 +26,7 @@
 	url = https://github.com/EOSIO/magic_get
 [submodule "libraries/fc"]
 	path = libraries/fc
-	url = https://gitlab.com/eosforce/fc
+	url = https://github.com/codexnetwork/codex.fc.git
 	branch = force
 [submodule "libraries/wabt"]
 	path = libraries/wabt

@@ -1,0 +1,6 @@
+{
+    "eosio-base-images":
+    {
+        "pipeline-branch": "release/1.7.x"
+    }
+}

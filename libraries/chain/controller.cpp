@@ -23,6 +23,17 @@
 #include <fc/io/json.hpp>
 #include <fc/scoped_exit.hpp>
 #include <fc/variant_object.hpp>
+#include <fc/io/fstream.hpp>
+
+#include <boost/asio/thread_pool.hpp>
+#include <boost/asio/post.hpp>
+
+#include <eosio/chain/memory_db.hpp>
+#include <eosio/chain/txfee_manager.hpp>
+#include <eosio/chain/config_on_chain.hpp>
+#include <eosio/chain/resource_limits_private.hpp>
+#include <eosio/chain/config.hpp>
+#include <eosio/chain/eosio_contract.hpp>
 
 #include <eosio/chain/native-contract/native_contracts.hpp>
 
@@ -1266,7 +1277,7 @@ struct controller_impl {
                                            bool explicit_billed_cpu_time = false )
    {
       EOS_ASSERT(deadline != fc::time_point(), transaction_exception, "deadline cannot be uninitialized");
-      check_action(trx->trx.actions);
+      check_action(trx->packed_trx->get_signed_transaction().actions);
 
       transaction_trace_ptr trace;
       try {

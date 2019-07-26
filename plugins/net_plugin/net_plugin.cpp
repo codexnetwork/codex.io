@@ -579,7 +579,7 @@ namespace eosio {
       void blk_send(const block_id_type& blkid);
       void stop_send();
 
-      void enqueue( const net_message &msg, bool trigger_send = true, bool to_sync_queue = false );
+      void enqueue( const net_message &msg, bool trigger_send = true );
       void enqueue_block( const signed_block_ptr& sb, bool trigger_send = true, bool to_sync_queue = false);
       void enqueue_buffer( const std::shared_ptr<std::vector<char>>& send_buffer,
                            bool trigger_send, int priority, go_away_reason close_after_send,
@@ -778,7 +778,6 @@ namespace eosio {
       rnd[0] = 0;
       response_expected.reset(new boost::asio::steady_timer( *my_impl->server_ioc ));
       read_delay_timer.reset(new boost::asio::steady_timer( *my_impl->server_ioc ));
-      read_delay_timer.reset(new boost::asio::steady_timer(app().get_io_service()));
    }
 
    bool connection::connected() {
@@ -937,7 +936,6 @@ namespace eosio {
       }
       if( buffer_queue.is_out_queue_empty() && trigger_send) {
          do_queue_write( priority );
-      }
       }
    }
 
@@ -2490,7 +2488,6 @@ namespace eosio {
       c->trx_in_progress_size += calc_trx_size( ptrx->packed_trx );
       chain_plug->accept_transaction(ptrx, [c, this, ptrx](const static_variant<fc::exception_ptr, transaction_trace_ptr>& result) {
          c->trx_in_progress_size -= calc_trx_size( ptrx->packed_trx );
-         c->trx_in_progress_size -= calc_trx_size( msg );
          if (result.contains<fc::exception_ptr>()) {
             peer_dlog(c, "bad packed_transaction : ${m}", ("m",result.get<fc::exception_ptr>()->what()));
          } else {
@@ -2639,7 +2636,6 @@ namespace eosio {
       controller& cc = chain_plug->chain();
       uint32_t lib = cc.last_irreversible_block_num();
       dispatcher->expire_blocks( lib );
-      dispatcher->expire_blocks( bn );
       for ( auto &c : connections ) {
          auto &stale_txn = c->trx_state.get<by_block_num>();
          stale_txn.erase( stale_txn.lower_bound(1), stale_txn.upper_bound(lib) );

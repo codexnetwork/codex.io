@@ -172,6 +172,9 @@ else( WIN32 ) # Apple AND Linux
                 set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-invalid-partial-specialization" )
             endif()
         endif()
+
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
     endif( APPLE )
 
     if( "${CMAKE_GENERATOR}" STREQUAL "Ninja" )

@@ -7,6 +7,8 @@
 
 #include <fstream>
 
+#include <contracts.hpp>
+
 eosio::chain::asset core_from_string(const std::string& s) {
   return eosio::chain::asset::from_string(s + " " CORE_SYMBOL_NAME);
 }
@@ -164,7 +166,7 @@ namespace eosio { namespace testing {
       if( !skip_pending_trxs ) {
          unapplied_transactions_type unapplied_trxs = control->get_unapplied_transactions(); // make copy of map
          for (const auto& entry : unapplied_trxs ) {
-            auto trace = control->push_transaction(entry.second, fc::time_point::maximum());
+            auto trace = control->push_transaction(entry.second, fc::time_point::maximum(), DEFAULT_BILLED_CPU_TIME_US );
             if(trace->except) {
                trace->except->dynamic_rethrow_exception();
             }
@@ -173,7 +175,7 @@ namespace eosio { namespace testing {
          vector<transaction_id_type> scheduled_trxs;
          while( (scheduled_trxs = get_scheduled_transactions() ).size() > 0 ) {
             for (const auto& trx : scheduled_trxs ) {
-               auto trace = control->push_scheduled_transaction(trx, fc::time_point::maximum());
+               auto trace = control->push_scheduled_transaction(trx, fc::time_point::maximum(), DEFAULT_BILLED_CPU_TIME_US);
                if(trace->except) {
                   trace->except->dynamic_rethrow_exception();
                }
@@ -344,7 +346,13 @@ namespace eosio { namespace testing {
    { try {
       if( !control->pending_block_state() )
          _start_block(control->head_block_time() + fc::microseconds(config::block_interval_us));
-      auto r = control->push_transaction( std::make_shared<transaction_metadata>(trx), deadline, billed_cpu_time_us );
+
+      auto mtrx = std::make_shared<transaction_metadata>( std::make_shared<packed_transaction>(trx) );
+      auto time_limit = deadline == fc::time_point::maximum() ?
+            fc::microseconds::maximum() :
+            fc::microseconds( deadline - fc::time_point::now() );
+      transaction_metadata::start_recover_keys( mtrx, control->get_thread_pool(), control->get_chain_id(), time_limit );
+      auto r = control->push_transaction( mtrx, deadline, billed_cpu_time_us );
       if( r->except_ptr ) std::rethrow_exception( r->except_ptr );
       if( r->except ) throw *r->except;
       return r;
@@ -363,7 +371,12 @@ namespace eosio { namespace testing {
          c = packed_transaction::zlib;
       }
 
-      auto r = control->push_transaction( std::make_shared<transaction_metadata>(trx,c), deadline, billed_cpu_time_us );
+      auto time_limit = deadline == fc::time_point::maximum() ?
+            fc::microseconds::maximum() :
+            fc::microseconds( deadline - fc::time_point::now() );
+      auto mtrx = std::make_shared<transaction_metadata>(trx, c);
+      transaction_metadata::start_recover_keys( mtrx, control->get_thread_pool(), control->get_chain_id(), time_limit );
+      auto r = control->push_transaction( mtrx, deadline, billed_cpu_time_us );
       if( r->except_ptr ) std::rethrow_exception( r->except_ptr );
       if( r->except)  throw *r->except;
       return r;
@@ -562,7 +575,7 @@ namespace eosio { namespace testing {
    }
 
 
-   transaction_trace_ptr base_tester::issue( account_name to, string amount, account_name currency ) {
+   transaction_trace_ptr base_tester::issue( account_name to, string amount, account_name currency, string memo ) {
       variant pretty_trx = fc::mutable_variant_object()
          ("actions", fc::variants({
             fc::mutable_variant_object()
@@ -576,6 +589,7 @@ namespace eosio { namespace testing {
                ("data", fc::mutable_variant_object()
                   ("to", to)
                   ("quantity", amount)
+                  ("memo", memo)
                )
             })
          );
@@ -809,7 +823,8 @@ namespace eosio { namespace testing {
          return other.sync_with(*this);
 
       auto sync_dbs = [](base_tester& a, base_tester& b) {
-         for( int i = 1; i <= a.control->head_block_num(); ++i ) {
+         for( uint32_t i = 1; i <= a.control->head_block_num(); ++i ) {
+
             auto block = a.control->fetch_block_by_number(i);
             if( block ) { //&& !b.control->is_known_block(block->id()) ) {
                auto bs = b.control->create_block_state_future( block );

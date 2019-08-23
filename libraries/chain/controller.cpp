@@ -797,7 +797,6 @@ struct controller_impl {
       });
       db.create<dynamic_global_property_object>([](auto&){});
 
-      //force_property_object    创建内存表的地方
       const auto fpo = db.create<force_property_object>([&](auto &fpo) {
          fpo.gmr.cpu_us = config::default_gmr_cpu_limit;
          fpo.gmr.net_byte = config::default_gmr_net_limit;
@@ -808,7 +807,6 @@ struct controller_impl {
       authorization.initialize_database();
       resource_limits.initialize_database();
 
-         //初始化  resource_limits
       resource_limits.set_gmr_parameters(
          {  fpo.gmr.ram_byte, fpo.gmr.cpu_us,fpo.gmr.net_byte}
       );

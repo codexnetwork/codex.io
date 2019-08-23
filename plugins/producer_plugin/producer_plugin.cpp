@@ -42,6 +42,12 @@ using std::vector;
 using std::deque;
 using boost::signals2::scoped_connection;
 
+// HACK TO EXPOSE LOGGER MAP
+
+namespace fc {
+   extern std::unordered_map<std::string,logger>& get_logger_map();
+}
+
 const fc::string logger_name("producer_plugin");
 fc::logger _log;
 
@@ -516,7 +522,7 @@ void producer_plugin::set_program_options(
    producer_options.add_options()
          ("enable-stale-production,e", boost::program_options::bool_switch()->notifier([this](bool e){my->_production_enabled = e;}), "Enable block production, even if the chain is stale.")
          ("pause-on-startup,x", boost::program_options::bool_switch()->notifier([this](bool p){my->_pause_production = p;}), "Start this node in a state where production is paused")
-         ("max-transaction-time", bpo::value<int32_t>()->default_value(30),
+         ("max-transaction-time", bpo::value<int32_t>()->default_value(300),
           "Limits the maximum time (in milliseconds) that is allowed a pushed transaction's code to execute before being considered invalid")
          ("max-irreversible-block-age", bpo::value<int32_t>()->default_value( -1 ),
           "Limits the maximum age (in seconds) of the DPOS Irreversible Block for a chain this node will produce blocks on (use negative value to indicate unlimited)")
@@ -788,8 +794,13 @@ void producer_plugin::plugin_shutdown() {
 }
 
 void producer_plugin::handle_sighup() {
-   fc::logger::update( logger_name, _log );
-   fc::logger::update( trx_trace_logger_name, _trx_trace_log );
+   auto& logger_map = fc::get_logger_map();
+   if(logger_map.find(logger_name) != logger_map.end()) {
+      _log = logger_map[logger_name];
+   }
+   if( logger_map.find(trx_trace_logger_name) != logger_map.end()) {
+      _trx_trace_log = logger_map[trx_trace_logger_name];
+   }
 }
 
 void producer_plugin::pause() {

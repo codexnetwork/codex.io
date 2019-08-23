@@ -16,9 +16,7 @@ add_library( eosio_chain
              block_state.cpp
              fork_database.cpp
              controller.cpp
-             config_on_chain.cpp
              authorization_manager.cpp
-             txfee_manager.cpp
              resource_limits.cpp
              block_log.cpp
              transaction_context.cpp
@@ -28,25 +26,38 @@ add_library( eosio_chain
              chain_id_type.cpp
              genesis_state.cpp
              ${CMAKE_CURRENT_BINARY_DIR}/genesis_state_root_key.cpp
-             wast_to_wasm.cpp
-             wasm_interface.cpp
-             wasm_eosio_validation.cpp
-             wasm_eosio_injection.cpp
-             apply_context.cpp
-             memory_db.cpp
-             abi_serializer.cpp
-             asset.cpp
-             snapshot.cpp
+
+#             chain_config.cpp
+#             block_trace.cpp
+              wast_to_wasm.cpp
+              wasm_interface.cpp
+              wasm_eosio_validation.cpp
+              wasm_eosio_injection.cpp
+              apply_context.cpp
+              abi_serializer.cpp
+              asset.cpp
+              snapshot.cpp
 
              webassembly/wavm.cpp
              webassembly/wabt.cpp
+
+#             get_config.cpp
+#             global_property_object.cpp
+#
+#             contracts/chain_initializer.cpp
+
+
+             transaction_metadata.cpp
+
+             # For Codex.io Addon files
+             config_on_chain.cpp
+             txfee_manager.cpp
+             memory_db.cpp
 
              native-contract/native_contracts.cpp
              native-contract/native_contracts_abi.cpp
              native-contract/native_contracts_apply.cpp
 
-
-             transaction_metadata.cpp
              ${HEADERS}
              )
 

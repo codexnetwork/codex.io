@@ -6,6 +6,7 @@ export DISK_MIN=20
 DOXYGEN=false
 ENABLE_COVERAGE_TESTING=false
 CORE_SYMBOL_NAME="SYS"
+ROOT_ACCOUNT="force"
 START_MAKE=true
 
 TIME_BEGIN=$( date -u +%s )
@@ -59,6 +60,18 @@ mkdir -p $MONGODB_DATA_LOCATION
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 REPO_ROOT="${SCRIPT_DIR}/.."
 BUILD_DIR="${REPO_ROOT}/build"
+
+USE_PUB_KEY_LEGACY_PREFIX=1
+MAX_PRODUCERS=23
+BLOCK_INTERVAL_MS=3000
+PRODUCER_REPETITIONS=1
+RESOURCE_MODEL=1
+
+# if chain use mutiple vote
+# USE_MULTIPLE_VOTE=1
+
+# if chain use bonus to vote
+USE_BONUS_TO_VOTE=1
 
 # Use current directory's tmp directory if noexec is enabled for /tmp
 if (mount | grep "/tmp " | grep --quiet noexec); then
@@ -246,21 +259,41 @@ printf "======================= Starting EOSIO Build =======================\\n"
 printf "## CMAKE_BUILD_TYPE=%s\\n" "${CMAKE_BUILD_TYPE}"
 printf "## ENABLE_COVERAGE_TESTING=%s\\n" "${ENABLE_COVERAGE_TESTING}"
 
+printf ">>>>>>>> DOXYGEN=%s\\n" "${DOXYGEN}"
+printf ">>>>>>>> RESOURCE_MODEL=%s\\n\\n" "${RESOURCE_MODEL}"
+
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 
-$CMAKE -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" -DCMAKE_CXX_COMPILER="${CXX_COMPILER}" \
-   -DCMAKE_C_COMPILER="${C_COMPILER}" -DCORE_SYMBOL_NAME="${CORE_SYMBOL_NAME}" \
+
+if ! "${CMAKE}" -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" -DCMAKE_CXX_COMPILER="${CXX_COMPILER}" \
+   -DCMAKE_C_COMPILER="${C_COMPILER}" -DWASM_ROOT="${WASM_ROOT}" -DCORE_SYMBOL_NAME="${CORE_SYMBOL_NAME}" \
+   -DUSE_PUB_KEY_LEGACY_PREFIX=${USE_PUB_KEY_LEGACY_PREFIX} \
+   -DUSE_MULTIPLE_VOTE=${USE_MULTIPLE_VOTE} \
+   -DROOT_ACCOUNT="${ROOT_ACCOUNT}" \
+   -DMAX_PRODUCERS="${MAX_PRODUCERS}" -DBLOCK_INTERVAL_MS="${BLOCK_INTERVAL_MS}" -DPRODUCER_REPETITIONS="${PRODUCER_REPETITIONS}" \
+   -DRESOURCE_MODEL=${RESOURCE_MODEL} \
    -DOPENSSL_ROOT_DIR="${OPENSSL_ROOT_DIR}" -DBUILD_MONGO_DB_PLUGIN=true \
    -DENABLE_COVERAGE_TESTING="${ENABLE_COVERAGE_TESTING}" -DBUILD_DOXYGEN="${DOXYGEN}" \
-   -DCMAKE_INSTALL_PREFIX=$OPT_LOCATION/codex $LOCAL_CMAKE_FLAGS "${REPO_ROOT}"
-if [ $? -ne 0 ]; then exit -1; fi
-make -j"${JOBS}"
-if [ $? -ne 0 ]; then exit -1; fi
+   -DCMAKE_INSTALL_PREFIX=$OPT_LOCATION ${LOCAL_CMAKE_FLAGS} "${REPO_ROOT}"
+then
+   printf "\\n\\t>>>>>>>>>>>>>>>>>>>> CMAKE building EOSIO has exited with the above error.\\n\\n"
+   exit -1
+fi
 
-cd $REPO_ROOT
+if [ "${START_MAKE}" == "false" ]; then
+   printf "\\n\\t>>>>>>>>>>>>>>>>>>>> EOSIO has been successfully configured but not yet built.\\n\\n"
+   exit 0
+fi
 
-TIME_END=$(( $(date -u +%s) - $TIME_BEGIN ))
+if [ -z ${JOBS} ]; then JOBS=$CPU_CORE; fi # Future proofing: Ensure $JOBS is set (usually set in scripts/eosio_build_*.sh scripts)
+if ! make -j"${JOBS}"
+then
+   printf "\\n\\t>>>>>>>>>>>>>>>>>>>> MAKE building EOSIO has exited with the above error.\\n\\n"
+   exit -1
+fi
+
+TIME_END=$(( $(date -u +%s) - ${TIME_BEGIN} ))
 
 printf "\n\n${bldred}\t   __________  ____  _______  __   ________   \n"
 printf "\t  / ____/ __ \/ __ \/ ____/ |/ /  /  _/ __ \  \n"
@@ -272,8 +305,8 @@ printf "\t                                              \n${txtrst}"
 printf "\\n\\tCodex.IO has been successfully built. %02d:%02d:%02d\\n\\n" $(($TIME_END/3600)) $(($TIME_END%3600/60)) $(($TIME_END%60))
 #printf "\\tTo verify your installation run the following commands:\\n"
 
-#print_instructions
+   #print_instructions
 
-printf "\\tFor more information:\\n"
-printf "\\tCodex.IO website: http://www.codex.network/#/en \\n"
-
+   printf "\\tFor more information:\\n"
+   printf "\\tCodex.IO website: https://open.eosforce.io/\#/en \\n"
+   printf "\\tCodex.IO Telegram channel @ https://t.me/forceio \\n"

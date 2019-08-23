@@ -437,9 +437,6 @@ struct controller_impl {
       controller_index_set::add_indices(db);
       contract_database_index_set::add_indices(db);
 
-      //db.add_index<action_fee_object_index>();
-      //db.add_index<config_data_object_index>();
-
       authorization.add_indices();
       resource_limits.add_indices();
    }
@@ -1756,7 +1753,7 @@ struct controller_impl {
          {EOS_PERCENT(chain_config.max_block_net_usage, chain_config.target_block_net_usage_pct), chain_config.max_block_net_usage, config::block_size_average_window_ms / config::block_interval_ms, max_virtual_mult, {99, 100}, {1000, 999}}
       );
       resource_limits.process_block_usage(pending->_pending_block_state->block_num);
-      //这个放在这里还有待考虑   xuyp
+
       const auto& gmr = self.get_force_property().gmr;
       resource_limits.set_gmr_parameters(
          {  gmr.ram_byte, gmr.cpu_us,gmr.net_byte}

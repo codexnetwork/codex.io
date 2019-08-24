@@ -5,8 +5,18 @@ CMAKE_BUILD_TYPE=Release
 export DISK_MIN=20
 DOXYGEN=false
 ENABLE_COVERAGE_TESTING=false
+
+CHAIN_ROOT_NAME="chain"
 CORE_SYMBOL_NAME="SYS"
 ROOT_ACCOUNT="force"
+USE_PUB_KEY_LEGACY_PREFIX=1
+MAX_PRODUCERS=23
+BLOCK_INTERVAL_MS=3000
+PRODUCER_REPETITIONS=1
+RESOURCE_MODEL=1
+#USE_MULTIPLE_VOTE=1
+USE_BONUS_TO_VOTE=1
+
 START_MAKE=true
 
 TIME_BEGIN=$( date -u +%s )
@@ -14,12 +24,12 @@ txtbld=$(tput bold)
 bldred=${txtbld}$(tput setaf 1)
 txtrst=$(tput sgr0)
 
-export SRC_LOCATION=${HOME}/codex/chain/src
-export OPT_LOCATION=${HOME}/codex/chain/opt
-export VAR_LOCATION=${HOME}/codex/chain/var
-export ETC_LOCATION=${HOME}/codex/chain/etc
-export BIN_LOCATION=${HOME}/codex/chain/bin
-export DATA_LOCATION=${HOME}/codex/chain/data
+export SRC_LOCATION=${HOME}/codex/${CHAIN_ROOT_NAME}/src
+export OPT_LOCATION=${HOME}/codex/${CHAIN_ROOT_NAME}/opt
+export VAR_LOCATION=${HOME}/codex/${CHAIN_ROOT_NAME}/var
+export ETC_LOCATION=${HOME}/codex/${CHAIN_ROOT_NAME}/etc
+export BIN_LOCATION=${HOME}/codex/${CHAIN_ROOT_NAME}/bin
+export DATA_LOCATION=${HOME}/codex/${CHAIN_ROOT_NAME}/data
 export CMAKE_VERSION_MAJOR=3
 export CMAKE_VERSION_MINOR=13
 export CMAKE_VERSION_PATCH=2
@@ -60,18 +70,6 @@ mkdir -p $MONGODB_DATA_LOCATION
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 REPO_ROOT="${SCRIPT_DIR}/.."
 BUILD_DIR="${REPO_ROOT}/build"
-
-USE_PUB_KEY_LEGACY_PREFIX=1
-MAX_PRODUCERS=23
-BLOCK_INTERVAL_MS=3000
-PRODUCER_REPETITIONS=1
-RESOURCE_MODEL=1
-
-# if chain use mutiple vote
-# USE_MULTIPLE_VOTE=1
-
-# if chain use bonus to vote
-USE_BONUS_TO_VOTE=1
 
 # Use current directory's tmp directory if noexec is enabled for /tmp
 if (mount | grep "/tmp " | grep --quiet noexec); then

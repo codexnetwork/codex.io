@@ -1,7 +1,7 @@
-set(VENDOR "eosforce.io")
-set(PROJECT_NAME "eosforce")
-set(DESC "Software for the EOSFORCE.IO network")
-set(URL "https://github.com/eosforce/eosforce")
+set(VENDOR "codex.io")
+set(PROJECT_NAME "codex.io")
+set(DESC "Software for the CODEX.IO network")
+set(URL "https://github.com/codexnetwork/codex.relay")
 set(EMAIL "service@eosforce.io")
 
 configure_file(${CMAKE_SOURCE_DIR}/scripts/generate_package.sh.in ${CMAKE_BINARY_DIR}/packages/generate_package.sh @ONLY)

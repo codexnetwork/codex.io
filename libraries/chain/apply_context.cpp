@@ -74,8 +74,8 @@ void apply_context::exec_one()
          }
 
          // native contract handler
-         if( act.account == config::native_account_name ){
-            apply_native_contract( act.name, *this );
+         if( act->account == config::native_account_name ){
+            apply_native_contract( act->name, *this );
          }
 
          if( ( receiver_account->code_hash != digest_type() ) &&

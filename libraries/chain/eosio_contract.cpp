@@ -210,7 +210,7 @@ void apply_system_native_setcode(apply_context& context) {
 // setfee just for test imp contracts
 void apply_system_native_setfee(apply_context& context) {
    auto &db = context.db;
-   auto act = context.act.data_as<setfee>();
+   auto act = context.get_action().data_as<setfee>();
 
    // need force.test
 
@@ -469,7 +469,7 @@ void apply_system_native_canceldelay(apply_context& context) {
 }
 
 void apply_system_native_setconfig(apply_context& context) {
-   auto cfg_data = context.act.data_as<setconfig>();
+   auto cfg_data = context.get_action().data_as<setconfig>();
    if( !( context.has_authorization(config::chain_config_name)
        || context.has_authorization(config::producers_account_name))) {
       EOS_THROW(missing_auth_exception, "setconfig need auth by eosio.prods");

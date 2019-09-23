@@ -90,8 +90,8 @@ else
             # Handle cleanup of data directory
             if $FULL; then
                ## Add both just to be safe
-               [[ $ARCH == "Darwin" ]] && INSTALL_PATHS+=("${HOME}/Library/Application\ Support/eosio")
-               [[ $ARCH != "Darwin" ]] && INSTALL_PATHS+=("${HOME}/.local/share/eosio")
+               [[ $ARCH == "Darwin" ]] && INSTALL_PATHS+=("${HOME}/Library/Application\ Support/codexio")
+               [[ $ARCH != "Darwin" ]] && INSTALL_PATHS+=("${HOME}/.local/share/codexio")
             fi
             # Version < 1.8.0; Before we started using ~/eosio/1.8.x
             # Arrays should return with newlines (IFS=\n;helpers.sh) as Application\ Support will split into two

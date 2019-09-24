@@ -358,14 +358,6 @@ namespace bacc = boost::accumulators;
       init( 0 );
    }
 
-   // set_fee_data insert onfee act in trx FIXME: need change fee
-   void transaction_context::set_fee_data( const asset& require_fee /*= asset{0}*/ ) {
-      EOS_ASSERT(!trx.actions[0].authorization.empty(), transaction_exception, "authorization empty");
-      fee_payer = trx.actions[0].authorization[0].actor;
-      max_fee_to_pay = require_fee; // it will work in next version
-      EOS_ASSERT(fee_payer != name{}, transaction_exception, "fee_payer nil");
-   }
-
    void transaction_context::add_limit_by_fee( const action &act ) {
       auto &db = control.db();
       const auto info = db.find<action_fee_object, by_action_name>(

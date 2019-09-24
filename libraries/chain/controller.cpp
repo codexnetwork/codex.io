@@ -1322,7 +1322,7 @@ struct controller_impl {
          check_action(dtrx.actions);
          trx_context.init_for_deferred_trx( gtrx.published );
 #if RESOURCE_MODEL == RESOURCE_MODEL_FEE
-         trx_context.set_fee_data();
+         trx_context.set_fee_ctx();
 #endif
          if( trx_context.enforce_whiteblacklist && pending->_block_status == controller::block_status::incomplete ) {
             flat_set<account_name> actors;
@@ -1616,7 +1616,7 @@ struct controller_impl {
             }
 #if RESOURCE_MODEL == RESOURCE_MODEL_FEE
             if( !trx->implicit ) {
-               trx_context.set_fee_data();
+               trx_context.set_fee_ctx();
             }
 #endif
             trx_context.exec();

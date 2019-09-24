@@ -37,8 +37,14 @@ namespace eosio { namespace chain {
 
          void init_for_deferred_trx( fc::time_point published );
 
-         // set_fee_data insert onfee act in trx
-         void set_fee_data( const asset& require_fee = asset{0} );
+         // set_fee_ctx insert onfee act in trx
+         inline void set_fee_ctx( const asset& fee_limit = asset{0} ) {
+            EOS_ASSERT(!trx.actions[0].authorization.empty(), transaction_exception, "authorization empty");
+            // TODO By CodexIO: can let other account to pay fee
+            fee_payer = trx.actions[0].authorization[0].actor;
+            max_fee_to_pay = fee_limit; // it will work in next version
+            EOS_ASSERT(fee_payer != name{}, transaction_exception, "fee_payer shound not nil");
+         }
 
          void exec();
          void finalize();

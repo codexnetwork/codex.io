@@ -22,10 +22,11 @@
 #include <eosio/chain/wasm_interface.hpp>
 #include <eosio/chain/abi_serializer.hpp>
 
+#include <eosio/chain/config_on_chain.hpp>
+
 #include <eosio/chain/authorization_manager.hpp>
 #include <eosio/chain/resource_limits.hpp>
-
-#include <eosio/chain/config_on_chain.hpp>
+// #include <eosio/chain/contract_table_objects.hpp>
 #include <eosio/chain/config.hpp>
 #include <eosio/chain/txfee_manager.hpp>
 

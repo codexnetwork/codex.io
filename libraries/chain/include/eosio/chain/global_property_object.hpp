@@ -83,6 +83,7 @@ namespace eosio { namespace chain {
          >
       >
    >;
+
 }}
 
 CHAINBASE_SET_INDEX_TYPE(eosio::chain::global_property_object, eosio::chain::global_property_multi_index)

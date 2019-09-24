@@ -9,6 +9,7 @@
 
 namespace eosio { namespace chain {
 
+
    txfee_manager::txfee_manager(){
       init_native_fee(config::system_account_name, N(newaccount), asset(1000));
       init_native_fee(config::system_account_name, N(updateauth), asset(1000));
@@ -26,7 +27,6 @@ namespace eosio { namespace chain {
 
       init_native_fee(config::system_account_name, N(setparams), asset(100*10000));
       init_native_fee(config::system_account_name, N(removebp), asset(100*10000));
-
       init_native_fee(config::token_account_name, N(transfer), asset(100));
       init_native_fee(config::token_account_name, N(issue),    asset(100));
       init_native_fee(config::token_account_name, N(create),   asset(10*10000));
@@ -48,14 +48,59 @@ namespace eosio { namespace chain {
       init_native_fee(config::msig_account_name, N(exec),      asset(10000));
    }
 
-   asset txfee_manager::get_required_fee( const controller& ctl, const action& act)const{
+   /*
+    * About Fee
+    *
+    * fee come from three mode:
+    *  - native, set in cpp
+    *  - set by eosio
+    *  - set by user
+    *
+    * and res limit can set a value or zero,
+    * all of this will make diff mode to calc res limit,
+    * support 1.0 EOS is for `C` cpu, `N` net and `R` ram,
+    * and cost fee by `f` EOS and extfee by `F` EOS
+    *
+    * then can give:
+    *  - native and no setfee : use native fee and unlimit res use
+    *  - eosio set fee {f, (c,n,r)}
+    *      (cpu_limit, net_limit, ram_limit) == (c + F*C, n + F*N, r + F*R)
+    *  - eosio set fee {f, (0,0,0)}
+    *      (cpu_limit, net_limit, ram_limit) == ((f+F)*C, (f+F)*N, (f+F)*R)
+    *  - user set fee {f, (0,0,0)}, user cannot set fee by c>0||n>0||r>0
+    *      (cpu_limit, net_limit, ram_limit) == ((f+F)*C, (f+F)*N, (f+F)*R)
+    *
+    *  so it can be check by:
+    *  if no setfee
+    *       if no native -> err
+    *       if native -> use native and unlimit res use
+    *  else
+    *       if res limit is (0,0,0) -> limit res by ((f+F)*C, (f+F)*N, (f+F)*R)
+    *       if res limit is (c,n,r) -> (c + F*C, n + F*N, r + F*R)
+    *
+    *  at the same time, eosio can set res limit > (0,0,0) and user cannot
+    *
+    */
+
+
+   asset txfee_manager::get_required_fee( const controller& ctl, const transaction& trx ) const {
+      auto fee = asset(0);
+
+      for (const auto& act : trx.actions ) {
+         fee += get_required_fee(ctl, act);
+      }
+
+      return fee;
+   }
+
+   asset txfee_manager::get_required_fee( const controller& ctl, const account_name& account, const action_name& act ) const {
       const auto &db = ctl.db();
       const auto block_num = ctl.head_block_num();
 
       // first check if changed fee
       try{
          const auto fee_in_db = db.find<action_fee_object, by_action_name>(
-               boost::make_tuple(act.account, act.name));
+               boost::make_tuple(account, act));
          if(    ( fee_in_db != nullptr )
                 && ( fee_in_db->fee != asset(0) ) ){
             return fee_in_db->fee;
@@ -66,7 +111,7 @@ namespace eosio { namespace chain {
          elog("catch unknown exp in get_required_fee");
       }
 
-      const auto native_fee = get_native_fee(block_num, act.account, act.name);
+      const auto native_fee = get_native_fee(block_num, account, act);
       if (native_fee != asset(0)) {
          return native_fee;
       }
@@ -74,7 +119,11 @@ namespace eosio { namespace chain {
       // no fee found throw err
       EOS_ASSERT(false, action_validate_exception,
                  "action ${acc} ${act} name not include in feemap or db",
-                 ("acc", act.account)("act", act.name));
+                 ("acc", account)("act", act));
+   }
+
+   asset txfee_manager::get_required_fee( const controller& ctl, const action& act ) const {
+      return get_required_fee( ctl, act.account, act.name );
    }
 
 } } /// namespace eosio::chain

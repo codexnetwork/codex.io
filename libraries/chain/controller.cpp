@@ -313,12 +313,14 @@ struct controller_impl {
     wasmif( cfg.wasm_runtime, db ),
     resource_limits( db ),
     authorization( s, db ),
+    txfee(),
     protocol_features( std::move(pfs) ),
     conf( cfg ),
     chain_id( cfg.genesis.compute_chain_id() ),
     read_mode( cfg.read_mode ),
     thread_pool( "chain", cfg.thread_pool_size )
    {
+
       fork_db.open( [this]( block_timestamp_type timestamp,
                             const flat_set<digest_type>& cur_features,
                             const vector<digest_type>& new_features )
@@ -2053,9 +2055,14 @@ struct controller_impl {
                         ("block", *b)("expected_receipt", receipt)
                       );
             const transaction_receipt_header& r = trx_receipts.back();
-            EOS_ASSERT( r == static_cast<const transaction_receipt_header&>(receipt),
-                        block_validate_exception, "receipt does not match",
-                        ("producer_receipt", receipt)("validator_receipt", trx_receipts.back()) );
+            
+            if( !(r == static_cast<const transaction_receipt_header&>(receipt)) ){
+               edump((*trace));
+               EOS_ASSERT( false,
+                           block_validate_exception, "receipt does not match",
+                           ("producer_receipt", receipt)("validator_receipt", trx_receipts.back())
+                           ("block_num", b->block_num())("trx_id", trace->id) );
+            }
          }
 
          finalize_block();
@@ -2064,7 +2071,8 @@ struct controller_impl {
 
          // this implicitly asserts that all header fields (less the signature) are identical
          EOS_ASSERT( producer_block_id == ab._id, block_validate_exception, "Block ID does not match",
-                     ("producer_block_id",producer_block_id)("validator_block_id",ab._id) );
+                     ("producer_block_id",producer_block_id)("validator_block_id",ab._id)
+                     ("block_num", b->block_num()) );
 
          auto bsp = std::make_shared<block_state>(
                         std::move( ab._pending_block_header_state ),
@@ -2546,6 +2554,10 @@ authorization_manager&         controller::get_mutable_authorization_manager()
 }
 
 const txfee_manager&   controller::get_txfee_manager()const
+{
+   return my->txfee;
+}
+txfee_manager&         controller::get_mutable_txfee_manager()
 {
    return my->txfee;
 }

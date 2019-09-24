@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <eosio/chain/config_on_chain.hpp>
 #include <eosio/chain/apply_context.hpp>
 #include <eosio/chain/controller.hpp>
 #include <eosio/chain/transaction_context.hpp>
@@ -878,6 +879,10 @@ void apply_context::add_ram_usage( account_name account, int64_t ram_delta ) {
    if( !p.second ) {
       p.first->delta += ram_delta;
    }
+}
+
+int64_t apply_context::get_num_config_on_chain( const name& typ ) {
+   return ::eosio::chain::get_num_config_on_chain( db, typ );
 }
 
 action_name apply_context::get_sender() const {

@@ -170,7 +170,8 @@ namespace eosio { namespace chain {
                                     3010013, "Invalid fixed key" )
       FC_DECLARE_DERIVED_EXCEPTION( symbol_type_exception,           chain_type_exception,
                                     3010014, "Invalid symbol" )
-
+      FC_DECLARE_DERIVED_EXCEPTION( config_type_exception,           chain_type_exception,
+                                    3015015, "Invalid config" )
 
    FC_DECLARE_DERIVED_EXCEPTION( fork_database_exception, chain_exception,
                                  3020000, "Fork database exception" )
@@ -244,6 +245,8 @@ namespace eosio { namespace chain {
                                     3040016, "Transaction includes an ill-formed deferred transaction generation context extension" )
       FC_DECLARE_DERIVED_EXCEPTION( disallowed_transaction_extensions_bad_block_exception, transaction_exception,
                                     3040017, "Transaction includes disallowed extensions (invalid block)" )
+      FC_DECLARE_DERIVED_EXCEPTION( tx_too_much, transaction_exception,
+                                    3040100, "block txs must less than config::block_max_tx_num" )
 
 
    FC_DECLARE_DERIVED_EXCEPTION( action_validate_exception, chain_exception,

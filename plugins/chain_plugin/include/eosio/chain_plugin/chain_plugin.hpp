@@ -151,6 +151,7 @@ public:
 
       vector<permission>         permissions;
 
+      // useless, but keep same with eosio
       fc::variant                total_resources;
       fc::variant                self_delegated_bandwidth;
       fc::variant                refund_request;

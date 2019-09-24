@@ -1853,7 +1853,7 @@ REGISTER_INTRINSICS(system_api,
    (publication_time,      int64_t() )
    (is_feature_activated,  int(int)  )
    (get_sender,            int64_t() )
-   (current_block_num,  int() )
+   (current_block_num,     int() )
 );
 
 REGISTER_INTRINSICS(context_free_system_api,

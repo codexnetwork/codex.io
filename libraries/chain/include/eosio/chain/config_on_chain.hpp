@@ -18,8 +18,8 @@ namespace eosio { namespace chain {
 
 namespace config{
    namespace res_typ{
-      static const auto cpu_per_fee = N(res.cpufee);
-      static const auto net_per_fee = N(res.netfee);
+      static const auto cpu_per_fee          = N(res.cpufee);
+      static const auto net_per_fee          = N(res.netfee);
       static const auto free_ram_per_account = N(res.freeram);
       static const auto ram_rent_b_per_eos   = N(res.ramrent);
    };
@@ -35,7 +35,7 @@ namespace config{
    };
 
    namespace gmr_typ{
-      static const auto gmr_cpu= N(gmr.cpu);
+      static const auto gmr_cpu = N(gmr.cpu);
       static const auto gmr_ram = N(gmr.ram);
       static const auto gmr_net = N(gmr.net);
    }

@@ -1486,7 +1486,7 @@ void mongo_db_plugin_impl::insert_default_abi()
       }
       get_abi_serializer(name_account);
       b_insert_default_abi = true;
-} 
+}
 
 void mongo_db_plugin_impl::create_expiration_index(mongocxx::collection& collection, uint32_t expire_after_seconds) {
    using bsoncxx::builder::basic::make_document;

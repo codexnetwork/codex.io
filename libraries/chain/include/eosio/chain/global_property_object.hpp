@@ -33,6 +33,7 @@ namespace eosio { namespace chain {
       chain_config                   configuration;
    };
 
+
    using global_property_multi_index = chainbase::shared_multi_index_container<
       global_property_object,
       indexed_by<

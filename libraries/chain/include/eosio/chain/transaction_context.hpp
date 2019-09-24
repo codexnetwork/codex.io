@@ -73,6 +73,7 @@ namespace eosio { namespace chain {
 
          void process_fee_cost( const action& act );
          void add_limit_by_fee( const action& act );
+         void schedule_fee_action();
 
          void add_ram_usage( account_name account, int64_t ram_delta );
 

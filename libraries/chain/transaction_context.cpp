@@ -411,6 +411,25 @@ namespace bacc = boost::accumulators;
       }
    }
 
+   void transaction_context::schedule_fee_action() {
+      // if fee_payer is nil, it is mean now is not pay fee by action
+      if( fee_payer != name{} ) {
+         if(max_fee_to_pay != asset{0}) {
+            EOS_ASSERT(fee_costed <= max_fee_to_pay, transaction_exception, "fee costed more then limit");
+         }
+
+         schedule_action( action{
+               vector<permission_level>{ { fee_payer, config::active_name } },
+               config::token_account_name, config::action::fee_name,
+               fc::raw::pack(transfer_fee{
+                  fee_payer, fee_costed
+               }),
+         }, fee_payer, false, 0, 0 );
+
+         execute_action( trace->action_traces.size() + 1, 0 );
+      }
+   }
+
    void transaction_context::exec() {
       EOS_ASSERT( is_initialized, transaction_exception, "must first initialize" );
 
@@ -432,15 +451,12 @@ namespace bacc = boost::accumulators;
          execute_action( i, 0 );
       }
 
+      // fee action
+      schedule_fee_action();
+
       if( delay != fc::microseconds() ) {
          schedule_transaction();
       }
-
-      // FIXME: 1.8 need fix fee
-#if RESOURCE_MODEL == RESOURCE_MODEL_FEE
-      //dlog("fee cost ${c}", ("c", fee_costed));
-      //dispatch_fee_action( trace->action_traces );
-#endif
    }
 
    void transaction_context::finalize() {
@@ -695,11 +711,11 @@ namespace bacc = boost::accumulators;
    {
       uint32_t new_action_ordinal = trace->action_traces.size() + 1;
 
+      process_fee_cost(act);
+
       trace->action_traces.emplace_back( *trace, act, receiver, context_free,
                                          new_action_ordinal, creator_action_ordinal,
                                          closest_unnotified_ancestor_action_ordinal );
-
-      process_fee_cost(act);
 
       return new_action_ordinal;
    }
@@ -710,11 +726,11 @@ namespace bacc = boost::accumulators;
    {
       uint32_t new_action_ordinal = trace->action_traces.size() + 1;
 
+      process_fee_cost(act);
+
       trace->action_traces.emplace_back( *trace, std::move(act), receiver, context_free,
                                          new_action_ordinal, creator_action_ordinal,
                                          closest_unnotified_ancestor_action_ordinal );
-
-      process_fee_cost(act);
 
       return new_action_ordinal;
    }
@@ -729,13 +745,13 @@ namespace bacc = boost::accumulators;
 
       const action& provided_action = get_action_trace( action_ordinal ).act;
 
+      process_fee_cost(provided_action);
+
       // The reserve above is required so that the emplace_back below does not invalidate the provided_action reference.
 
       trace->action_traces.emplace_back( *trace, provided_action, receiver, context_free,
                                          new_action_ordinal, creator_action_ordinal,
                                          closest_unnotified_ancestor_action_ordinal );
-
-      process_fee_cost(act);
 
       return new_action_ordinal;
    }

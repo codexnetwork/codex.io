@@ -59,9 +59,7 @@ using controller_index_set = index_set<
    transaction_multi_index,
    generated_transaction_multi_index,
    table_id_multi_index,
-#if RESOURCE_MODEL == RESOURCE_MODEL_FEE
    action_fee_object_index,
-#endif
    config_data_object_index,
    code_index
 >;
@@ -235,9 +233,7 @@ struct controller_impl {
    wasm_interface                 wasmif;
    resource_limits_manager        resource_limits;
    authorization_manager          authorization;
-#if RESOURCE_MODEL == RESOURCE_MODEL_FEE
    txfee_manager                  txfee;
-#endif
    protocol_feature_manager       protocol_features;
    controller::config             conf;
    chain_id_type                  chain_id;
@@ -350,10 +346,7 @@ struct controller_impl {
       SET_NATIVE_SYSTEM_APP_HANDLER( unlinkauth );
       SET_NATIVE_SYSTEM_APP_HANDLER( canceldelay );
       SET_NATIVE_SYSTEM_APP_HANDLER( setconfig );
-
-#if RESOURCE_MODEL == RESOURCE_MODEL_FEE
       SET_NATIVE_SYSTEM_APP_HANDLER( setfee );
-#endif
    }
 
    /**
@@ -2552,12 +2545,10 @@ authorization_manager&         controller::get_mutable_authorization_manager()
    return my->authorization;
 }
 
-#if RESOURCE_MODEL == RESOURCE_MODEL_FEE
 const txfee_manager&   controller::get_txfee_manager()const
 {
    return my->txfee;
 }
-#endif
 
 const protocol_feature_manager& controller::get_protocol_feature_manager()const
 {

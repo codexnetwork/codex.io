@@ -358,8 +358,7 @@ namespace bacc = boost::accumulators;
       init( 0 );
    }
 
-#if RESOURCE_MODEL == RESOURCE_MODEL_FEE
-   // set_fee_data insert onfee act in trx
+   // set_fee_data insert onfee act in trx FIXME: need change fee
    void transaction_context::set_fee_data( const asset& require_fee /*= asset{0}*/ ) {
       EOS_ASSERT(!trx.actions[0].authorization.empty(), transaction_exception, "authorization empty");
       fee_payer = trx.actions[0].authorization[0].actor;
@@ -440,7 +439,6 @@ namespace bacc = boost::accumulators;
       }
       */
    }
-#endif
 
    void transaction_context::exec() {
       EOS_ASSERT( is_initialized, transaction_exception, "must first initialize" );

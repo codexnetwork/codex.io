@@ -8,7 +8,6 @@
 #include <eosio/chain/asset.hpp>
 #include <eosio/chain/multi_index_includes.hpp>
 
-#if RESOURCE_MODEL == RESOURCE_MODEL_FEE
 namespace eosio { namespace chain {
 
    class controller;
@@ -89,4 +88,3 @@ FC_REFLECT(eosio::chain::fee_paramter, (name)(fee))
 FC_REFLECT(eosio::chain::action_fee_object, (id)(account)(message_type)(fee))
 
 CHAINBASE_SET_INDEX_TYPE(eosio::chain::action_fee_object, eosio::chain::action_fee_object_index)
-#endif

@@ -7,7 +7,6 @@
 #include <eosio/chain/txfee_manager.hpp>
 #include <eosio/chain/controller.hpp>
 
-#if RESOURCE_MODEL == RESOURCE_MODEL_FEE
 namespace eosio { namespace chain {
 
    txfee_manager::txfee_manager(){
@@ -79,4 +78,3 @@ namespace eosio { namespace chain {
    }
 
 } } /// namespace eosio::chain
-#endif

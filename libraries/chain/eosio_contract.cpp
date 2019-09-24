@@ -206,7 +206,6 @@ void apply_system_native_setcode(apply_context& context) {
    }
 }
 
-#if RESOURCE_MODEL == RESOURCE_MODEL_FEE
 // setfee just for test imp contracts
 void apply_system_native_setfee(apply_context& context) {
    auto &db = context.db;
@@ -254,7 +253,6 @@ void apply_system_native_setfee(apply_context& context) {
       });
    }
 }
-#endif
 
 void apply_system_native_setabi(apply_context& context) {
    auto& db  = context.db;

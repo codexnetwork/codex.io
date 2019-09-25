@@ -1,4 +1,5 @@
-#! /bin/bash
+#!/usr/bin/env bash
+set -eo pipefail
 
 VERS=`sw_vers -productVersion | awk '/10\.13\..*/{print $0}'`
 if [[ -z "$VERS" ]];
@@ -16,7 +17,7 @@ fi
 
 NAME="${PROJECT}-${VERSION}.${MAC_VERSION}.bottle"
 
-mkdir -p ${PROJECT}/${VERSION}/opt/eosio/lib/cmake
+mkdir -p ${PROJECT}/${VERSION}/opt/codexio/lib/cmake
 
 PREFIX="${PROJECT}/${VERSION}"
 SPREFIX="\/usr\/local"
@@ -45,7 +46,7 @@ echo "class Eosio < Formula
    depends_on \"gettext\"
    depends_on \"openssl\"
    depends_on \"libusb\"
-   depends_on :macos => :high_sierra
+   depends_on :macos => :mojave
    depends_on :arch =>  :intel
 
    bottle do

@@ -1,6 +1,36 @@
 {
-    "eosio-base-images":
+    "eos-multiversion-tests":
     {
-        "pipeline-branch": "release/1.7.x"
+        "environment":
+        {
+            "IMAGE_TAG": "_1-8-0-rc2"
+        },
+        "configuration":
+        [
+            "170=v1.7.0"
+        ]
+    },
+    "eosio-docker-builds":
+    {
+        "environment":
+        {
+            "BUILDER_TAG": "v1.8.0"
+        }
+    },
+    "eosio-sync-tests":
+    {
+        "environment":
+        {
+            "SKIP_PRE_V180": "true",
+            "SKIP_V180": "false"
+        }
+    },
+    "eosio-replay-tests":
+    {
+        "environment":
+        {
+            "SKIP_PRE_V180": "true",
+            "SKIP_V180": "false"
+        }
     }
 }

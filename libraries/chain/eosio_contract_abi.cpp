@@ -143,7 +143,7 @@ abi_def eosio_contract_abi(const abi_def& eosio_system_abi)
          {"active", "authority"},
       }
    });
-
+   
    eos_abi.structs.emplace_back( struct_def {
       "setconfig", "", {
          {"typ", "name"},
@@ -162,7 +162,6 @@ abi_def eosio_contract_abi(const abi_def& eosio_system_abi)
       }
    });
 
-#if RESOURCE_MODEL == RESOURCE_MODEL_FEE
    eos_abi.structs.emplace_back( struct_def {
          "setfee", "", {
                {"account", "account_name"},
@@ -173,7 +172,6 @@ abi_def eosio_contract_abi(const abi_def& eosio_system_abi)
                {"ram_limit", "uint32"}
          }
    });
-#endif
 
    eos_abi.structs.emplace_back( struct_def {
       "setabi", "", {
@@ -238,9 +236,7 @@ abi_def eosio_contract_abi(const abi_def& eosio_system_abi)
    // TODO add ricardian contracts
    eos_abi.actions.push_back( action_def{name("newaccount"), "newaccount",""} );
    eos_abi.actions.push_back( action_def{name("setcode"), "setcode",""} );
-#if RESOURCE_MODEL == RESOURCE_MODEL_FEE
    eos_abi.actions.push_back( action_def{name("setfee"), "setfee",""} );
-#endif
    eos_abi.actions.push_back( action_def{name("setabi"), "setabi",""} );
    eos_abi.actions.push_back( action_def{name("updateauth"), "updateauth",""} );
    eos_abi.actions.push_back( action_def{name("deleteauth"), "deleteauth",""} );

@@ -37,10 +37,14 @@ namespace eosio { namespace chain {
 
          void init_for_deferred_trx( fc::time_point published );
 
-#if RESOURCE_MODEL == RESOURCE_MODEL_FEE
-         // set_fee_data insert onfee act in trx
-         void set_fee_data( const asset& require_fee = asset{0} );
-#endif
+         // set_fee_ctx insert onfee act in trx
+         inline void set_fee_ctx( const asset& fee_limit = asset{0} ) {
+            EOS_ASSERT(!trx.actions[0].authorization.empty(), transaction_exception, "authorization empty");
+            // TODO By CodexIO: can let other account to pay fee
+            fee_payer = trx.actions[0].authorization[0].actor;
+            max_fee_to_pay = fee_limit; // it will work in next version
+            EOS_ASSERT(fee_payer != name{}, transaction_exception, "fee_payer shound not nil");
+         }
 
          void exec();
          void finalize();
@@ -66,22 +70,36 @@ namespace eosio { namespace chain {
 
          friend struct controller_impl;
          friend class apply_context;
-#if RESOURCE_MODEL == RESOURCE_MODEL_FEE
-         void process_fee( const action& act );
-         void dispatch_fee_action( vector<action_trace>& trace );
-         void add_limit_by_fee( const action &act );
-#endif
+
+         void process_fee_cost( const action& act );
+         void add_limit_by_fee( const action& act );
+         void schedule_fee_action();
 
          void add_ram_usage( account_name account, int64_t ram_delta );
 
-         void dispatch_action( action_trace& trace, const action& a, account_name receiver, bool context_free = false, uint32_t recurse_depth = 0 );
-         inline void dispatch_action( action_trace& trace, const action& a, bool context_free = false ) {
-            dispatch_action(trace, a, a.account, context_free);
-         };
+         action_trace& get_action_trace( uint32_t action_ordinal );
+         const action_trace& get_action_trace( uint32_t action_ordinal )const;
+
+         /** invalidates any action_trace references returned by get_action_trace */
+         uint32_t schedule_action( const action& act, account_name receiver, bool context_free,
+                                   uint32_t creator_action_ordinal, uint32_t closest_unnotified_ancestor_action_ordinal );
+
+         /** invalidates any action_trace references returned by get_action_trace */
+         uint32_t schedule_action( action&& act, account_name receiver, bool context_free,
+                                   uint32_t creator_action_ordinal, uint32_t closest_unnotified_ancestor_action_ordinal );
+
+         /** invalidates any action_trace references returned by get_action_trace */
+         uint32_t schedule_action( uint32_t action_ordinal, account_name receiver, bool context_free,
+                                   uint32_t creator_action_ordinal, uint32_t closest_unnotified_ancestor_action_ordinal );
+
+         void execute_action( uint32_t action_ordinal, uint32_t recurse_depth );
+
          void schedule_transaction();
          void record_transaction( const transaction_id_type& id, fc::time_point_sec expire );
 
          void validate_cpu_usage_to_bill( int64_t u, bool check_minimum = true )const;
+
+         void disallow_transaction_extensions( const char* error_msg )const;
 
       /// Fields:
       public:
@@ -113,6 +131,7 @@ namespace eosio { namespace chain {
          int64_t                       billed_cpu_time_us = 0;
          bool                          explicit_billed_cpu_time = false;
 
+         // state context for fee in exec trx
          account_name                  fee_payer      = name{};
          asset                         fee_costed     = asset{0};
          asset                         max_fee_to_pay = asset{0};

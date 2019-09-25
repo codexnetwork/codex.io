@@ -404,7 +404,8 @@ namespace bacc = boost::accumulators;
       */
    }
    void transaction_context::process_fee_cost( const action& act ){
-      if( fee_payer != name{} ) {
+      if(    ( fee_payer != name{} )
+          && ( (act.account != config::token_account_name) || (act.name != config::action::fee_name) ) ) {
          const auto fee = control.get_txfee_manager().get_required_fee(control, act);
          fee_costed += fee; // TODO : Check fee is > fee_limit
          add_limit_by_fee(act);
@@ -418,7 +419,7 @@ namespace bacc = boost::accumulators;
             EOS_ASSERT(fee_costed <= max_fee_to_pay, transaction_exception, "fee costed more then limit");
          }
 
-         schedule_action( action{
+         const auto fee_action_ordinal = schedule_action( action{
                vector<permission_level>{ { fee_payer, config::active_name } },
                config::token_account_name, config::action::fee_name,
                fc::raw::pack(transfer_fee{
@@ -426,7 +427,7 @@ namespace bacc = boost::accumulators;
                }),
          }, fee_payer, false, 0, 0 );
 
-         execute_action( trace->action_traces.size() + 1, 0 );
+         execute_action( fee_action_ordinal, 0 );
       }
    }
 

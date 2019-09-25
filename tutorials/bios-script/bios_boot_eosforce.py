@@ -170,12 +170,12 @@ def stepMakeGenesis():
     run('mkdir -p ' + os.path.abspath(args.config_dir))
     run('mkdir -p ' + os.path.abspath(args.config_dir) + '/keys/' )
 
-    run('cp ' + args.contracts_dir + '/force.token/force.token.abi ' + os.path.abspath(args.config_dir))
-    run('cp ' + args.contracts_dir + '/force.token/force.token.wasm ' + os.path.abspath(args.config_dir))
-    run('cp ' + args.contracts_dir + '/force.system/force.system.abi ' + os.path.abspath(args.config_dir))
-    run('cp ' + args.contracts_dir + '/force.system/force.system.wasm ' + os.path.abspath(args.config_dir))
-    run('cp ' + args.contracts_dir + '/force.msig/force.msig.abi ' + os.path.abspath(args.config_dir))
-    run('cp ' + args.contracts_dir + '/force.msig/force.msig.wasm ' + os.path.abspath(args.config_dir))
+    run('cp ../genesis/force.token.abi ' + os.path.abspath(args.config_dir))
+    run('cp ../genesis/force.token.wasm ' + os.path.abspath(args.config_dir))
+    run('cp ../genesis/force.system.abi ' + os.path.abspath(args.config_dir))
+    run('cp ../genesis/force.system.wasm ' + os.path.abspath(args.config_dir))
+    run('cp ../genesis/force.msig.abi ' + os.path.abspath(args.config_dir))
+    run('cp ../genesis/force.msig.wasm ' + os.path.abspath(args.config_dir))
 
     #run('cp ./genesis-data/genesis.json ' + os.path.abspath(args.config_dir))
     #replaceFile(os.path.abspath(args.config_dir) + "/genesis.json", "#CORE_SYMBOL#", args.symbol)

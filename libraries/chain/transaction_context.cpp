@@ -436,12 +436,14 @@ namespace bacc = boost::accumulators;
 
       if( apply_context_free ) {
          for( const auto& act : trx.context_free_actions ) {
+            process_fee_cost( act );
             schedule_action( act, act.account, true, 0, 0 );
          }
       }
 
       if( delay == fc::microseconds() ) {
          for( const auto& act : trx.actions ) {
+            process_fee_cost( act );
             schedule_action( act, act.account, false, 0, 0 );
          }
       }
@@ -712,8 +714,6 @@ namespace bacc = boost::accumulators;
    {
       uint32_t new_action_ordinal = trace->action_traces.size() + 1;
 
-      process_fee_cost(act);
-
       trace->action_traces.emplace_back( *trace, act, receiver, context_free,
                                          new_action_ordinal, creator_action_ordinal,
                                          closest_unnotified_ancestor_action_ordinal );
@@ -726,8 +726,6 @@ namespace bacc = boost::accumulators;
                                                   uint32_t closest_unnotified_ancestor_action_ordinal )
    {
       uint32_t new_action_ordinal = trace->action_traces.size() + 1;
-
-      process_fee_cost(act);
 
       trace->action_traces.emplace_back( *trace, std::move(act), receiver, context_free,
                                          new_action_ordinal, creator_action_ordinal,
@@ -745,8 +743,6 @@ namespace bacc = boost::accumulators;
       trace->action_traces.reserve( new_action_ordinal );
 
       const action& provided_action = get_action_trace( action_ordinal ).act;
-
-      process_fee_cost(provided_action);
 
       // The reserve above is required so that the emplace_back below does not invalidate the provided_action reference.
 

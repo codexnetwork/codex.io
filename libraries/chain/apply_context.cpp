@@ -330,6 +330,8 @@ void apply_context::execute_inline( action&& a ) {
       }
    }
 
+   trx_context.process_fee_cost(a);
+
    auto inline_receiver = a.account;
    _inline_actions.emplace_back(
       schedule_action( std::move(a), inline_receiver, false )
@@ -344,6 +346,7 @@ void apply_context::execute_context_free_inline( action&& a ) {
    EOS_ASSERT( a.authorization.size() == 0, action_validate_exception,
                "context-free actions cannot have authorizations" );
 
+   trx_context.process_fee_cost(a);
 
    auto inline_receiver = a.account;
    _cfa_inline_actions.emplace_back(

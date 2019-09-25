@@ -294,6 +294,7 @@ void apply_system_native_updateauth(apply_context& context) {
    auto& authorization = context.control.get_mutable_authorization_manager();
    auto& db = context.db;
 
+   // FIXME: need change use system config
    EOS_ASSERT(!update.permission.empty(), action_validate_exception, "Cannot create authority with empty name");
    EOS_ASSERT( update.permission.to_string().find( "eosio." ) != 0, action_validate_exception,
                "Permission names that start with 'eosio.' are reserved" );

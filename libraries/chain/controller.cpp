@@ -722,9 +722,6 @@ struct controller_impl {
       controller_index_set::add_indices(db);
       contract_database_index_set::add_indices(db);
 
-      //db.add_index<action_fee_object_index>();
-      //db.add_index<config_data_object_index>();
-
       authorization.add_indices();
       resource_limits.add_indices();
    }
@@ -972,18 +969,16 @@ struct controller_impl {
    }
 
    // initialize_contract init sys contract
-   void initialize_contract( const uint64_t& contract_account_name,
-                             const bytes& code,
-                             const bytes& abi,
+   void initialize_contract( const system_contract& sc,
                              const bool privileged = false ) {
-      const auto& code_hash = fc::sha256::hash(code.data(), (uint32_t) code.size());
-      const int64_t code_size = code.size();
-      const int64_t abi_size = abi.size();
+      const auto& code_hash = fc::sha256::hash(sc.code.data(), (uint32_t) sc.code.size());
+      const int64_t code_size = sc.code.size();
+      const int64_t abi_size = sc.abi.size();
 
-      const auto& account = db.get<account_object, by_name>( contract_account_name );
+      const auto& account = db.get<account_object, by_name>( sc.name );
       db.modify(account, [&]( auto& a ) {
          if( abi_size > 0 ) {
-            a.abi.assign(abi.data(), abi_size);
+            a.abi.assign(sc.abi.data(), abi_size);
          }
       });
 
@@ -995,7 +990,7 @@ struct controller_impl {
       } else {
          db.create<code_object>([&](code_object& o) {
             o.code_hash = code_hash;
-            o.code.assign(code.data(), code_size);
+            o.code.assign(sc.code.data(), code_size);
             o.code_ref_count = 1;
             o.first_block_used = 1;
             o.vm_type = 0;
@@ -1003,7 +998,7 @@ struct controller_impl {
          });
       }
 
-      const auto& account_meta = db.get<account_metadata_object, by_name>( contract_account_name );
+      const auto& account_meta = db.get<account_metadata_object, by_name>( sc.name );
       db.modify(account_meta, [&]( auto& a ) {
          a.set_privileged( privileged );
          a.code_sequence += 1;
@@ -1015,7 +1010,7 @@ struct controller_impl {
       });
 
       // TODO need change
-      const auto& usage  = db.get<resource_limits::resource_usage_object, resource_limits::by_owner>( contract_account_name );
+      const auto& usage  = db.get<resource_limits::resource_usage_object, resource_limits::by_owner>( sc.name );
       db.modify( usage, [&]( auto& u ) {
           u.ram_usage += (code_size + abi_size) * config::setcode_ram_bytes_multiplier;
       });
@@ -1044,9 +1039,11 @@ struct controller_impl {
       create_native_account(config::msig_account_name, system_auth, system_auth, false);
       create_native_account(config::fee_account_name, system_auth, system_auth, false);
 
-      initialize_contract(config::system_account_name, conf.system_code, conf.system_abi, true);
-      initialize_contract(config::token_account_name, conf.token_code, conf.token_abi);
-      initialize_contract(config::msig_account_name, conf.msig_code, conf.msig_abi, true);
+
+      initialize_contract(conf.system, true);
+      initialize_contract(conf.token);
+      initialize_contract(conf.msig, true);
+
 
       const auto& sym = symbol(CORE_SYMBOL).to_symbol_code();
       const auto tsum = get_token_sum();
@@ -3362,6 +3359,30 @@ const force_property_object& controller::get_force_property()const {
 
 void controller::set_gmr_config(gmr_type gt,uint64_t value) {
    my->set_gmr_config(gt,value);
+}
+
+void system_contract::load( const account_name& n, const boost::filesystem::path& config_path ) {
+   ilog("load contract for system : ${contract}", ("contract", n));
+
+   const auto path_root = config_path.string();
+   const auto wasm_path = path_root + ".wasm";
+   const auto abi_path = path_root + ".abi";
+
+   name = n;
+
+   std::string wasm;
+   fc::read_file_contents(wasm_path, wasm);
+   EOS_ASSERT(!wasm.empty(), wasm_file_not_found, "no wasm file ${path} found", ("path", wasm_path));
+   const string binary_wasm_header("\x00\x61\x73\x6d", 4);
+   if( wasm.compare(0, 4, binary_wasm_header) == 0 ) {
+      code = bytes(wasm.begin(), wasm.end());
+   } else {
+      EOS_THROW(wasm_serialization_error, "not support this ${path} wasm", ("path", wasm_path));
+   }
+
+   EOS_ASSERT(fc::exists(abi_path), abi_not_found_exception, "no abi file ${path} found", ("path", abi_path));
+   const auto abi_json = fc::json::from_file(abi_path).as<abi_def>();
+   abi = fc::raw::pack(abi_json);
 }
 
 void controller::add_to_ram_correction( account_name account, uint64_t ram_bytes ) {

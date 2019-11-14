@@ -3832,8 +3832,8 @@ int main( int argc, char** argv ) {
          args("proposal_hash", proposal_hash);
       }
 
-      auto accountPermissions = get_account_permissions(tx_permission, {proposer,config::active_name});
-      send_actions({chain::action{accountPermissions, "eosio.msig", action, variant_to_bin( chain::config::msig_account_name, action, args ) }});
+      auto accountPermissions = get_account_permissions(tx_permission, {name(proposer), config::active_name});
+      send_actions({chain::action{accountPermissions, N(eosio.msig), name(action), variant_to_bin( N(eosio.msig), name(action), args ) }});
    };
 
    // multisig approve
@@ -3862,8 +3862,8 @@ int main( int argc, char** argv ) {
       auto args = fc::mutable_variant_object()
          ("account", invalidator);
 
-      auto accountPermissions = get_account_permissions(tx_permission, {invalidator,config::active_name});
-      send_actions({chain::action{accountPermissions, "eosio.msig", "invalidate", variant_to_bin( chain::config::msig_account_name, "invalidate", args ) }});
+      auto accountPermissions = get_account_permissions(tx_permission, {name(invalidator), config::active_name});
+      send_actions({chain::action{accountPermissions, N(eosio.msig), N(invalidate), variant_to_bin( N(eosio.msig), N(invalidate), args ) }});
    });
 
    // multisig cancel
@@ -3890,7 +3890,7 @@ int main( int argc, char** argv ) {
          ("proposal_name", proposal_name)
          ("canceler", canceler);
 
-      send_actions({chain::action{accountPermissions, "eosio.msig", "cancel", variant_to_bin( chain::config::msig_account_name, N(cancel), args ) }});
+      send_actions({chain::action{accountPermissions, N(eosio.msig), N(cancel), variant_to_bin( N(eosio.msig), N(cancel), args ) }});
       }
    );
 
@@ -3919,7 +3919,7 @@ int main( int argc, char** argv ) {
          ("proposal_name", proposal_name)
          ("executer", executer);
 
-      send_actions({chain::action{accountPermissions, "eosio.msig", "exec", variant_to_bin( chain::config::msig_account_name, N(exec), args ) }});
+      send_actions({chain::action{accountPermissions, N(eosio.msig), N(exec), variant_to_bin( N(eosio.msig), N(exec), args ) }});
       }
    );
 

@@ -121,6 +121,30 @@ namespace eosio {
       }
    }
 
+   static void add_genesis_account_history_data(chainbase::database& db, const account_name& name, const account_name& controlling, const public_key_type& pubkey ) {
+      db.create<public_key_history_object>([&](public_key_history_object& obj) {
+         obj.public_key = pubkey;
+         obj.name = name;
+         obj.permission = config::owner_name;
+      });
+      db.create<public_key_history_object>([&](public_key_history_object& obj) {
+         obj.public_key = pubkey;
+         obj.name = name;
+         obj.permission = config::active_name;
+      });
+
+      db.create<account_control_history_object>([&](account_control_history_object& obj) {
+         obj.controlled_account = name;
+         obj.controlled_permission = config::owner_name;
+         obj.controlling_account = controlling;
+      });
+      db.create<account_control_history_object>([&](account_control_history_object& obj) {
+         obj.controlled_account = name;
+         obj.controlled_permission = config::active_name;
+         obj.controlling_account = controlling;
+      });
+   }
+
    struct filter_entry {
       name receiver;
       name action;
@@ -367,15 +391,8 @@ namespace eosio {
          const auto genesis_file = app().config_dir() / "genesis.json";
          gs = fc::json::from_file(genesis_file).as<genesis_state>();
 
-         const auto owner_pm_lv = vector<permission_level_weight>{{{1, config::owner_name}, 1}};
-         const auto active_pm_lv = vector<permission_level_weight>{{{1, config::active_name}, 1}};
-
          for( const auto& account : gs.initial_account_list ) {
-            const auto& public_key = account.key;
-            add(db, vector<key_weight>(1, {public_key, 1}), account.name, config::owner_name);
-            add(db, owner_pm_lv, account.name, config::owner_name);
-            add(db, vector<key_weight>(1, {public_key, 1}), account.name, config::active_name);
-            add(db, active_pm_lv, account.name, config::active_name);
+            add_genesis_account_history_data( db, account.name, account.name, account.key );
          }
       }
    }

@@ -1060,6 +1060,7 @@ class system_api : public context_aware_api {
       name get_sender() {
          return context.get_sender();
       }
+
       uint32_t current_block_num() {
          return ( context.control.head_block_num() );
       }
@@ -1121,7 +1122,7 @@ public:
    }
    
    int64_t get_num_config_on_chain( uint64_t typ ) {
-      return context.get_num_config_on_chain(typ);
+      return context.get_num_config_on_chain(name{typ});
    }
 
    void eosio_exit(int32_t code) {

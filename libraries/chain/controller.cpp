@@ -62,9 +62,9 @@ using controller_index_set = index_set<
    generated_transaction_multi_index,
    table_id_multi_index,
    code_index,
-   database_header_multi_index
+   database_header_multi_index,
    action_fee_object_index,
-   config_data_object_index,
+   config_data_object_index
 >;
 
 using contract_database_index_set = index_set<
@@ -340,7 +340,8 @@ struct controller_impl {
 
 
 #define SET_NATIVE_SYSTEM_APP_HANDLER(action) \
-   set_apply_handler( config::system_account_name, config::system_account_name, #action, &BOOST_PP_CAT(apply_system_native_,action) )
+   set_apply_handler( config::system_account_name, config::system_account_name, action_name(#action), \
+                      &BOOST_PP_CAT(apply_, BOOST_PP_CAT(system_native, BOOST_PP_CAT(_, action) ) ) )
 
       SET_NATIVE_SYSTEM_APP_HANDLER( newaccount );
       SET_NATIVE_SYSTEM_APP_HANDLER( setcode );
@@ -442,17 +443,21 @@ struct controller_impl {
       }
    }
 
+   void init_schedule_producer( const genesis_state& gs, legacy::producer_schedule_type &lps ){
+      lps.producers.reserve(config::max_producers);
+      for( const auto& producer : conf.genesis.initial_producer_list ) {
+         lps.producers.push_back({producer.name, producer.bpkey});
+      }
+   }
+
    /**
     *  Sets fork database head to the genesis state.
     */
    void initialize_blockchain_state(const genesis_state& genesis) {
       wlog( "Initializing new blockchain with genesis state" );
-      producer_schedule_type initial_schedule{ 0, {} };
-
-      initial_schedule.producers.reserve(config::max_producers);
-      for( const auto& producer : conf.genesis.initial_producer_list ) {
-         initial_schedule.producers.push_back({producer.name, producer.bpkey});
-      }
+      legacy::producer_schedule_type initial_legacy_schedule{ 0, {} };
+      init_schedule_producer( genesis, initial_legacy_schedule );
+      producer_authority_schedule initial_schedule{ initial_legacy_schedule };
 
       block_header_state genheader;
       genheader.active_schedule                = initial_schedule;
@@ -1052,13 +1057,6 @@ struct controller_impl {
       }
    }
 
-   void initialize_schedule( producer_schedule_type& schedule ) {
-      schedule.producers.reserve(config::max_producers);
-      for( const auto& producer : conf.genesis.initial_producer_list ) {
-         schedule.producers.push_back({ producer.name, producer.bpkey });
-      }
-   }
-
    asset get_token_sum() {
       asset sum = asset(0);
        for (const auto &account : conf.genesis.initial_account_list) {
@@ -1076,7 +1074,7 @@ struct controller_impl {
                config::token_account_name, account.name, N(accounts), account.name,
                memory_db::token_account{ account.asset });
          const authority auth(public_key);
-         create_native_account(account.name, auth, auth, false);
+         create_native_account( conf.genesis.initial_timestamp, account.name, auth, auth, false );
 #if RESOURCE_MODEL == RESOURCE_MODEL_DELEGATE
          resource_limits.set_account_limits(account.name, 0, 0, 0);
 #endif
@@ -1150,9 +1148,9 @@ struct controller_impl {
 
    void initialize_database_force() {
       authority system_auth(conf.genesis.initial_key);
-      create_native_account(config::token_account_name, system_auth, system_auth, false);
-      create_native_account(config::msig_account_name, system_auth, system_auth, false);
-      create_native_account(config::fee_account_name, system_auth, system_auth, false);
+      create_native_account(conf.genesis.initial_timestamp, config::token_account_name, system_auth, system_auth, false);
+      create_native_account(conf.genesis.initial_timestamp, config::msig_account_name, system_auth, system_auth, false);
+      create_native_account(conf.genesis.initial_timestamp, config::fee_account_name, system_auth, system_auth, false);
 
 
       initialize_contract(conf.system, true);
@@ -1162,7 +1160,7 @@ struct controller_impl {
 
       const auto& sym = symbol(CORE_SYMBOL).to_symbol_code();
       const auto tsum = get_token_sum();
-      memory_db(self).insert(config::token_account_name, sym, N(stat),
+      memory_db(self).insert(config::token_account_name, name{uint64_t(sym)}, N(stat),
                              config::token_account_name,
                              memory_db::currency_stats{
                                    tsum,
@@ -1231,7 +1229,7 @@ struct controller_impl {
       create_native_account( genesis.initial_timestamp, config::system_account_name, system_auth, system_auth, true );
 
       // for native contracts
-      create_native_account( config::native_account_name, system_auth, system_auth, true );
+      create_native_account( genesis.initial_timestamp, config::native_account_name, system_auth, system_auth, true );
 
       initialize_database_force();
 
@@ -1681,7 +1679,7 @@ struct controller_impl {
                                            bool explicit_billed_cpu_time = false )
    {
       EOS_ASSERT(deadline != fc::time_point(), transaction_exception, "deadline cannot be uninitialized");
-      check_action(trx->packed_trx->get_signed_transaction().actions);
+      check_action(trx->packed_trx()->get_signed_transaction().actions);
 
       transaction_trace_ptr trace;
       try {

@@ -31,6 +31,18 @@ public:
    constexpr static size_t max_stack_buffer_size = 512;
 
    template <typename T>
+   void insert(const name &code,
+               const name &scope,
+               const name &table,
+               const account_name& payer,
+               const T &obj){
+      insert( code.to_uint64_t(),
+              scope.to_uint64_t(),
+              table.to_uint64_t(),
+              payer, obj );
+   }
+
+   template <typename T>
    void insert(const uint64_t &code,
                const uint64_t &scope,
                const uint64_t &table,
@@ -44,12 +56,24 @@ public:
    }
 
    template <typename T>
+   bool get( const name &code,
+             const name &scope,
+             const name &table,
+             const name &id,
+             T &out ) {
+      return get( code.to_uint64_t(),
+                  scope.to_uint64_t(),
+                  table.to_uint64_t(),
+                  id.to_uint64_t(), out );
+   }
+
+   template <typename T>
    bool get( const uint64_t &code,
              const uint64_t &scope,
              const uint64_t &table,
              const uint64_t &id,
              T &out ) {
-      const auto* tab = find_table( code, scope, table );
+      const auto* tab = find_table( name{code}, name{scope}, name{table} );
       if( !tab ) return false;
 
       const key_value_object* obj = db.find<key_value_object, by_scope_primary>(
@@ -105,13 +129,13 @@ public:
         account_name owner;
         asset     balance;
 
-        uint64_t primary_key()const { return owner; }
+        uint64_t primary_key()const { return owner.to_uint64_t(); }
     };
 
    struct vote4ram_info {
       account_name voter;
       asset staked = asset{0};
-      uint64_t primary_key() const { return voter; }
+      uint64_t primary_key() const { return voter.to_uint64_t(); }
    };
 
    struct bp_info {
@@ -140,14 +164,14 @@ public:
             url(url) {
       }
 
-      uint64_t primary_key() const { return name; }
+      uint64_t primary_key() const { return name.to_uint64_t(); }
    };
 
    struct chain_status {
       account_name name;
       bool emergency = false;
 
-      uint64_t primary_key() const { return name; }
+      uint64_t primary_key() const { return name.to_uint64_t(); }
    };
 
    // currency_stats
@@ -161,14 +185,14 @@ public:
 
    // vote_info
    struct vote_info {
-      account_name    bpname         = 0;
+      account_name    bpname;
       asset           staked         = asset{0};
       uint32_t        voteage_update_height = 0;
       int64_t         voteage        = 0;
       asset           unstaking      = asset{0};
       uint32_t        unstake_height = 0;
 
-      uint64_t        primary_key() const { return bpname; }
+      uint64_t        primary_key() const { return bpname.to_uint64_t(); }
    };
 
 };
@@ -284,6 +308,5 @@ FC_REFLECT(eosio::chain::memory_db::token_account, (balance))
 FC_REFLECT(eosio::chain::memory_db::eoslock_account, (owner)(balance))
 FC_REFLECT(eosio::chain::memory_db::chain_status, (name)(emergency))
 FC_REFLECT(eosio::chain::memory_db::currency_stats, (supply)(max_supply)(issuer))
-FC_REFLECT(eosio::chain::memory_db::vote_info,
-           (bpname)(staked)(voteage)(voteage_update_height)(unstaking)(unstake_height))
+FC_REFLECT(eosio::chain::memory_db::vote_info, (bpname)(staked)(voteage)(voteage_update_height)(unstaking)(unstake_height))
 FC_REFLECT(eosio::chain::memory_db::vote4ram_info, (voter)(staked))

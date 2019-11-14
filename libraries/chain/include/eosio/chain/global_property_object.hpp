@@ -153,13 +153,9 @@ FC_REFLECT(eosio::chain::legacy::snapshot_global_property_object_v2,
 
 FC_REFLECT(eosio::chain::force_property_object,
            (clfg)
-          )  
+          )
+
 FC_REFLECT(eosio::chain::snapshot_global_property_object,
             (proposed_schedule_block_num)(proposed_schedule)(configuration)(chain_id)
           )
 
-FC_REFLECT(eosio::chain::dynamic_global_property_object,
-            (global_action_sequence)
-          )
-
-        

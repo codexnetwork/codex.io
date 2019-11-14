@@ -122,6 +122,7 @@ namespace eosio { namespace chain {
             system_contract token;
             system_contract msig;
 
+            genesis_state genesis;
 
             db_read_mode             read_mode              = db_read_mode::SPECULATIVE;
             validation_mode          block_validation_mode  = validation_mode::FULL;
@@ -415,8 +416,8 @@ FC_REFLECT( eosio::chain::controller::config,
             (force_all_checks)
             (disable_replay_opts)
             (contracts_console)
-            (genesis)
             (wasm_runtime)
+            (genesis)
             (token)
             (system)
             (msig)

@@ -357,6 +357,10 @@ namespace eosio { namespace chain {
             return true;
          }
       }
+
+      return false;
+   }
+
    /**
     * emplace an extension into the extensions type such that it is properly ordered by extension id
     * this assumes exts is already sorted by extension id
@@ -366,7 +370,7 @@ namespace eosio { namespace chain {
          return id < ext.first;
       });
 
-      return false;
+      return exts.emplace(insert_itr, eid, std::move(data));
    }
 
    // set data to extensions
@@ -382,10 +386,6 @@ namespace eosio { namespace chain {
 
       exts.emplace_back(typ, fc::raw::pack(data));
    }
-
-      return exts.emplace(insert_itr, eid, std::move(data));
-   }
-
 
    template<typename Container>
    class end_insert_iterator : public std::iterator< std::output_iterator_tag, void, void, void, void >

@@ -1035,8 +1035,6 @@ struct register_producer_subcommand {
          auto regprod_var = regproducer_variant(name(producer_str), producer_key, url, loc );
          auto accountPermissions = get_account_permissions(tx_permission, {name(producer_str), config::active_name});
          send_actions({create_action(accountPermissions, config::system_account_name, N(regproducer), regprod_var)});
-         auto regprod_var = regproducer_variant(producer_str, producer_key, url, loc );
-         send_actions({create_action({permission_level{producer_str,config::active_name}}, config::system_account_name, N(regproducer), regprod_var)});
       });
    }
 };
@@ -1055,14 +1053,14 @@ struct update_bp_subcommand {
       register_producer->add_option("url", url, localized("url where info about producer can be found"), true);
       add_standard_transaction_options(register_producer);
 
-
       register_producer->set_callback([this] {
+         const auto producer_name = name(producer_str);
          public_key_type producer_key;
          try {
             producer_key = public_key_type(producer_key_str);
          } EOS_RETHROW_EXCEPTIONS(public_key_type_exception, "Invalid producer public key: ${public_key}", ("public_key", producer_key_str))
-         auto regprod_var = regproducer_variant(producer_str, producer_key, url, loc );
-         send_actions({create_action({permission_level{producer_str,config::active_name}}, config::system_account_name, N(updatebp), regprod_var)});
+         auto regprod_var = regproducer_variant(producer_name, producer_key, url, loc );
+         send_actions({create_action({permission_level{producer_name, config::active_name}}, config::system_account_name, N(updatebp), regprod_var)});
       });
    }
 };
@@ -1188,7 +1186,7 @@ struct vote_producer_claim_subcommand {
                   ("voter", voter_str)
                   ("bpname", bpname_str)
                   ;
-         send_actions({create_action({permission_level{voter_str,config::active_name}}, config::system_account_name, N(claim), act_payload)});  
+         send_actions({create_action({permission_level{name(voter_str),config::active_name}}, config::system_account_name, N(claim), act_payload)});  
       });
    }
 };
@@ -1208,7 +1206,7 @@ struct vote_producer_unfreeze_subcommand {
                   ("voter", voter_str)
                   ("bpname", bpname_str)
                   ;
-         send_actions({create_action({permission_level{voter_str,config::active_name}}, config::system_account_name, N(unfreeze), act_payload)});  
+         send_actions({create_action({permission_level{name(voter_str),config::active_name}}, config::system_account_name, N(unfreeze), act_payload)});  
       });
    }
 };
@@ -1253,7 +1251,7 @@ struct vote_producer_vote_subcommand {
                   ("voter", voter_str)
                   ("bpname", bpname_str)
                   ("stake", asset::from_string( amount ));
-         send_actions({create_action({permission_level{voter_str,config::active_name}}, config::system_account_name, N(vote), act_payload)});
+         send_actions({create_action({permission_level{name(voter_str),config::active_name}}, config::system_account_name, N(vote), act_payload)});
       });
    }
 };
@@ -3005,7 +3003,7 @@ int main( int argc, char** argv ) {
       asset a;
       a = a.from_string(fee_to_set);
       dlog("set fee ${act}, ${fee}", ("act", action_to_set_fee)("fee", a));
-      send_actions({create_setfee(account, action_to_set_fee, a, cpu_limit_by_contract, net_limit_by_contract, ram_limit_by_contract)});
+      send_actions({create_setfee(name(account), name(action_to_set_fee), a, cpu_limit_by_contract, net_limit_by_contract, ram_limit_by_contract)});
    });
 #else
    feeSubcommand->set_callback([&] {
@@ -3182,7 +3180,7 @@ int main( int argc, char** argv ) {
          tx_force_unique = false;
       }
 
-      send_actions({create_transfer(con, sender, recipient, to_asset(/*con, */amount), memo)});
+      send_actions({create_transfer(con, name(sender), name(recipient), to_asset(/*con, */amount), memo)});
    });
 
    // Net subcommand
@@ -3970,14 +3968,14 @@ int main( int argc, char** argv ) {
    auto unfreeze = vote_producer_unfreeze_subcommand(voteProducer);
    //auto listProducers = list_producers_subcommand(system);
 
-     string bp_name;
+   string bp_name;
    auto set_or_cancle_emergency = [&](const bool bSet) {
       auto args = fc::mutable_variant_object()
          ("bpname", bp_name)
          ("emergency", bSet);
 
-      auto accountPermissions = vector<permission_level>{{bp_name, config::active_name}};
-      send_actions({chain::action{accountPermissions, "eosio", "setemergency", variant_to_bin( chain::config::system_account_name, N(setemergency), args ) }});
+      auto accountPermissions = vector<permission_level>{{name(bp_name), config::active_name}};
+      send_actions({chain::action{accountPermissions, N(eosio), N(setemergency), variant_to_bin( chain::config::system_account_name, N(setemergency), args ) }});
    };
 
    auto setemergency = system->add_subcommand("setemergency", localized("Setting the status of the chain is an emergency"));

@@ -42,7 +42,7 @@ int memory_db::db_store_i64(
       const char *buffer,
       size_t buffer_size ) {
 //   require_write_lock( scope );
-   const auto& tab = find_or_create_table(code, scope, table, payer);
+   const auto& tab = find_or_create_table(name{code}, name{scope}, name{table}, payer);
    auto tableid = tab.id;
 
    EOS_ASSERT( payer != account_name(), invalid_table_payer, "must specify a valid account to pay for new record" );

@@ -121,6 +121,30 @@ namespace eosio {
       }
    }
 
+   static void add_genesis_account_history_data(chainbase::database& db, const account_name& name, const account_name& controlling, const public_key_type& pubkey ) {
+      db.create<public_key_history_object>([&](public_key_history_object& obj) {
+         obj.public_key = pubkey;
+         obj.name = name;
+         obj.permission = config::owner_name;
+      });
+      db.create<public_key_history_object>([&](public_key_history_object& obj) {
+         obj.public_key = pubkey;
+         obj.name = name;
+         obj.permission = config::active_name;
+      });
+
+      db.create<account_control_history_object>([&](account_control_history_object& obj) {
+         obj.controlled_account = name;
+         obj.controlled_permission = config::owner_name;
+         obj.controlling_account = controlling;
+      });
+      db.create<account_control_history_object>([&](account_control_history_object& obj) {
+         obj.controlled_account = name;
+         obj.controlled_permission = config::active_name;
+         obj.controlling_account = controlling;
+      });
+   }
+
    struct filter_entry {
       name receiver;
       name action;
@@ -148,14 +172,14 @@ namespace eosio {
             if (bypass_filter) {
               pass_on = true;
             }
-            if (filter_on.find({ act.receiver, 0, 0 }) != filter_on.end()) {
+            if (filter_on.find({ act.receiver, {}, {} }) != filter_on.end()) {
               pass_on = true;
             }
-            if (filter_on.find({ act.receiver, act.act.name, 0 }) != filter_on.end()) {
+            if (filter_on.find({ act.receiver, act.act.name, {} }) != filter_on.end()) {
               pass_on = true;
             }
             for (const auto& a : act.act.authorization) {
-              if (filter_on.find({ act.receiver, 0, a.actor }) != filter_on.end()) {
+              if (filter_on.find({ act.receiver, {}, a.actor }) != filter_on.end()) {
                 pass_on = true;
               }
               if (filter_on.find({ act.receiver, act.act.name, a.actor }) != filter_on.end()) {
@@ -165,14 +189,14 @@ namespace eosio {
 
             if (!pass_on) {  return false;  }
 
-            if (filter_out.find({ act.receiver, 0, 0 }) != filter_out.end()) {
+            if (filter_out.find({ act.receiver, {}, {} }) != filter_out.end()) {
               return false;
             }
-            if (filter_out.find({ act.receiver, act.act.name, 0 }) != filter_out.end()) {
+            if (filter_out.find({ act.receiver, act.act.name, {} }) != filter_out.end()) {
               return false;
             }
             for (const auto& a : act.act.authorization) {
-              if (filter_out.find({ act.receiver, 0, a.actor }) != filter_out.end()) {
+              if (filter_out.find({ act.receiver, {}, a.actor }) != filter_out.end()) {
                 return false;
               }
               if (filter_out.find({ act.receiver, act.act.name, a.actor }) != filter_out.end()) {
@@ -189,13 +213,13 @@ namespace eosio {
             result.insert( act.receiver );
             for( const auto& a : act.act.authorization ) {
                if( bypass_filter ||
-                   filter_on.find({ act.receiver, 0, 0}) != filter_on.end() ||
-                   filter_on.find({ act.receiver, 0, a.actor}) != filter_on.end() ||
-                   filter_on.find({ act.receiver, act.act.name, 0}) != filter_on.end() ||
+                   filter_on.find({ act.receiver, {}, {}}) != filter_on.end() ||
+                   filter_on.find({ act.receiver, {}, a.actor}) != filter_on.end() ||
+                   filter_on.find({ act.receiver, act.act.name, {}}) != filter_on.end() ||
                    filter_on.find({ act.receiver, act.act.name, a.actor }) != filter_on.end() ) {
-                 if ((filter_out.find({ act.receiver, 0, 0 }) == filter_out.end()) &&
-                     (filter_out.find({ act.receiver, 0, a.actor }) == filter_out.end()) &&
-                     (filter_out.find({ act.receiver, act.act.name, 0 }) == filter_out.end()) &&
+                 if ((filter_out.find({ act.receiver, {}, {} }) == filter_out.end()) &&
+                     (filter_out.find({ act.receiver, {}, a.actor }) == filter_out.end()) &&
+                     (filter_out.find({ act.receiver, act.act.name, {} }) == filter_out.end()) &&
                      (filter_out.find({ act.receiver, act.act.name, a.actor }) == filter_out.end())) {
                    result.insert( a.actor );
                  }
@@ -209,7 +233,7 @@ namespace eosio {
             chainbase::database& db = const_cast<chainbase::database&>( chain.db() ); // Override read-only access to state DB (highly unrecommended practice!)
 
             const auto& idx = db.get_index<account_history_index, by_account_action_seq>();
-            auto itr = idx.lower_bound( boost::make_tuple( name(n.value+1), 0 ) );
+            auto itr = idx.lower_bound( boost::make_tuple( name(n.to_uint64_t()+1), 0 ) );
 
             uint64_t asn = 0;
             if( itr != idx.begin() ) --itr;
@@ -320,8 +344,8 @@ namespace eosio {
                std::vector<std::string> v;
                boost::split( v, s, boost::is_any_of( ":" ));
                EOS_ASSERT( v.size() == 3, fc::invalid_arg_exception, "Invalid value ${s} for --filter-on", ("s", s));
-               filter_entry fe{v[0], v[1], v[2]};
-               EOS_ASSERT( fe.receiver.value, fc::invalid_arg_exception,
+               filter_entry fe{eosio::chain::name(v[0]), eosio::chain::name(v[1]), eosio::chain::name(v[2])};
+               EOS_ASSERT( fe.receiver.to_uint64_t(), fc::invalid_arg_exception,
                            "Invalid value ${s} for --filter-on", ("s", s));
                my->filter_on.insert( fe );
             }
@@ -332,8 +356,8 @@ namespace eosio {
                std::vector<std::string> v;
                boost::split( v, s, boost::is_any_of( ":" ));
                EOS_ASSERT( v.size() == 3, fc::invalid_arg_exception, "Invalid value ${s} for --filter-out", ("s", s));
-               filter_entry fe{v[0], v[1], v[2]};
-               EOS_ASSERT( fe.receiver.value, fc::invalid_arg_exception,
+               filter_entry fe{eosio::chain::name(v[0]), eosio::chain::name(v[1]), eosio::chain::name(v[2])};
+               EOS_ASSERT( fe.receiver.to_uint64_t(), fc::invalid_arg_exception,
                            "Invalid value ${s} for --filter-out", ("s", s));
                my->filter_out.insert( fe );
             }
@@ -367,15 +391,8 @@ namespace eosio {
          const auto genesis_file = app().config_dir() / "genesis.json";
          gs = fc::json::from_file(genesis_file).as<genesis_state>();
 
-         const auto owner_pm_lv = vector<permission_level_weight>{{{1, config::owner_name}, 1}};
-         const auto active_pm_lv = vector<permission_level_weight>{{{1, config::active_name}, 1}};
-
          for( const auto& account : gs.initial_account_list ) {
-            const auto& public_key = account.key;
-            add(db, vector<key_weight>(1, {public_key, 1}), account.name, config::owner_name);
-            add(db, owner_pm_lv, account.name, config::owner_name);
-            add(db, vector<key_weight>(1, {public_key, 1}), account.name, config::active_name);
-            add(db, active_pm_lv, account.name, config::active_name);
+            add_genesis_account_history_data( db, account.name, account.name, account.key );
          }
       }
    }
@@ -403,7 +420,7 @@ namespace eosio {
         auto n = params.account_name;
         idump((pos));
         if( pos == -1 ) {
-            auto itr = idx.lower_bound( boost::make_tuple( name(n.value+1), 0 ) );
+            auto itr = idx.lower_bound( boost::make_tuple( name(n.to_uint64_t()+1), 0 ) );
             if( itr == idx.begin() ) {
                if( itr->account == n )
                   pos = itr->account_sequence_num+1;

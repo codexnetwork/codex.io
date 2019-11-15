@@ -1,7 +1,3 @@
-/**
- *  @file
- *  @copyright defined in eos/LICENSE
- */
 #pragma once
 #include <eosio/chain/name.hpp>
 #include <eosio/chain/chain_id_type.hpp>
@@ -77,6 +73,7 @@ namespace eosio { namespace chain {
    using                               fc::time_point;
    using                               fc::safe;
    using                               fc::flat_map;
+   using                               fc::flat_multimap;
    using                               fc::flat_set;
    using                               fc::static_variant;
    using                               fc::ecc::range_proof_type;
@@ -192,6 +189,7 @@ namespace eosio { namespace chain {
       protocol_state_object_type,
       account_ram_correction_object_type,
       code_object_type,
+      database_header_object_type,
 
       // delete UNUSED_obj_type_for_eosio_upgrade_XX when eosio add obj type
 
@@ -363,6 +361,18 @@ namespace eosio { namespace chain {
       return false;
    }
 
+   /**
+    * emplace an extension into the extensions type such that it is properly ordered by extension id
+    * this assumes exts is already sorted by extension id
+    */
+   inline auto emplace_extension( extensions_type& exts, uint16_t eid, vector<char>&& data) {
+      auto insert_itr = std::upper_bound(exts.begin(), exts.end(), eid, [](uint16_t id, const auto& ext){
+         return id < ext.first;
+      });
+
+      return exts.emplace(insert_itr, eid, std::move(data));
+   }
+
    // set data to extensions
    template <typename T>
    inline void set_to_extensions( extensions_type& exts, const uint16_t& typ, const T& data ) {
@@ -454,6 +464,14 @@ namespace eosio { namespace chain {
             return tail_t::template extract<ResultVariant>( id, data, result );
          }
       };
+
+      template<typename T, typename ... Ts>
+      struct is_any_of {
+         static constexpr bool value = std::disjunction_v<std::is_same<T, Ts>...>;
+      };
+
+      template<typename T, typename ... Ts>
+      constexpr bool is_any_of_v = is_any_of<T, Ts...>::value;
    }
 
    template<typename E, typename F>
@@ -475,6 +493,9 @@ namespace eosio { namespace chain {
          return ( flags & ~static_cast<F>(field) );
    }
 
+   template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+   template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+
 } }  // eosio::chain
 
-FC_REFLECT( eosio::chain::void_t, )
+FC_REFLECT_EMPTY( eosio::chain::void_t )

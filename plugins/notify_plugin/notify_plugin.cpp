@@ -115,7 +115,7 @@ bool notify_plugin_impl::filter(const action_trace &act)
   {
     return true;
   }
-  else if (filter_on.find({act.receiver, 0}) != filter_on.end())
+  else if (filter_on.find({act.receiver, name{}}) != filter_on.end())
   {
     return true;
   }
@@ -126,7 +126,7 @@ fc::variant notify_plugin_impl::deserialize_action_data(action act)
 {
   auto &chain = chain_plug->chain();
   auto serializer = chain.get_abi_serializer(act.account, max_deserialization_time);
-  FC_ASSERT(serializer.valid() && serializer->get_action_type(act.name) != action_name(),
+  FC_ASSERT(serializer.valid() && serializer->get_action_type(act.name) != "",
             "Unable to get abi for account: ${acc}, action: ${a} Not sending notification.",
             ("acc", act.account)("a", act.name));
   return serializer->binary_to_variant(act.name.to_string(), act.data, max_deserialization_time);
@@ -302,8 +302,8 @@ void notify_plugin::plugin_initialize(const variables_map &options)
         EOS_ASSERT(v.size() == 2, fc::invalid_arg_exception,
                    "Invalid value ${s} for --notify-filter-on",
                    ("s", s));
-        notify_plugin_impl::filter_entry fe{v[0], v[1]};
-        EOS_ASSERT(fe.receiver.value, fc::invalid_arg_exception, "Invalid value ${s} for --notify-filter-on", ("s", s));
+        notify_plugin_impl::filter_entry fe{eosio::chain::name(v[0]), eosio::chain::name(v[1])};
+        EOS_ASSERT(fe.receiver != eosio::chain::name{}, fc::invalid_arg_exception, "Invalid value ${s} for --notify-filter-on", ("s", s));
         my->filter_on.insert(fe);
       }
     }

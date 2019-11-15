@@ -1,5 +1,5 @@
 set(SOURCES main.cpp)
-find_package(LLVM 4.0 REQUIRED CONFIG)
+find_package(LLVM REQUIRED CONFIG)
 
 link_directories(${LLVM_LIBRARY_DIR})
 

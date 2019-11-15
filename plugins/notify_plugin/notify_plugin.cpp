@@ -303,7 +303,7 @@ void notify_plugin::plugin_initialize(const variables_map &options)
                    "Invalid value ${s} for --notify-filter-on",
                    ("s", s));
         notify_plugin_impl::filter_entry fe{eosio::chain::name(v[0]), eosio::chain::name(v[1])};
-        EOS_ASSERT(fe.receiver != name{}, fc::invalid_arg_exception, "Invalid value ${s} for --notify-filter-on", ("s", s));
+        EOS_ASSERT(fe.receiver != eosio::chain::name{}, fc::invalid_arg_exception, "Invalid value ${s} for --notify-filter-on", ("s", s));
         my->filter_on.insert(fe);
       }
     }

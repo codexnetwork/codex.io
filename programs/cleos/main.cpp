@@ -160,7 +160,7 @@ bfs::path determine_home_directory()
 }
 
 string url = "http://127.0.0.1:8888/";
-string default_wallet_url = "unix://" + (determine_home_directory() / "eosio-wallet" / (string(key_store_executable_name) + ".sock")).string();
+string default_wallet_url = "unix://" + (determine_home_directory() / (config::system_account_root + "-wallet") / (string(key_store_executable_name) + ".sock")).string();
 string wallet_url; //to be set to default_wallet_url in main
 bool no_verify = false;
 vector<string> headers;
@@ -1263,8 +1263,8 @@ struct list_bp_subcommand {
       list_bps->add_option("-l,--limit", limit, localized("The maximum number of rows to return"));
       list_bps->set_callback([this] {
           auto result = call(get_table_func, fc::mutable_variant_object("json", true)
-                               ("code", name(config::system_account_name).to_string())
-                               ("scope", "eosio")
+                               ("code", config::system_account_root)
+                               ("scope", config::system_account_root)
                                ("table", "bps")
                                ("limit",limit));
           std::cout << fc::json::to_pretty_string(result)
@@ -1510,7 +1510,7 @@ struct bidname_info_subcommand {
       list_producers->add_option("newname", newname, localized("The bidding name"))->required();
       list_producers->set_callback([this] {
          auto rawResult = call(get_table_func, fc::mutable_variant_object("json", true)
-                               ("code", "eosio")("scope", "eosio")("table", "namebids")
+                               ("code", config::system_account_root)("scope", config::system_account_root)("table", "namebids")
                                ("lower_bound", name(newname).to_uint64_t())
                                ("upper_bound", name(newname).to_uint64_t() + 1)
                                // Less than ideal upper_bound usage preserved so cleos can still work with old buggy nodeos versions
@@ -3581,7 +3581,7 @@ int main( int argc, char** argv ) {
          ("requested", requested_perm_var)
          ("trx", trx_var);
 
-      send_actions({chain::action{accountPermissions, N(eosio.msig), N(propose), variant_to_bin( N(eosio.msig), N(propose), args ) }});
+      send_actions({chain::action{accountPermissions, config::msig_account_name, N(propose), variant_to_bin( config::msig_account_name, N(propose), args ) }});
    });
 
    //multisig propose transaction
@@ -3614,7 +3614,7 @@ int main( int argc, char** argv ) {
          ("requested", requested_perm_var)
          ("trx", trx_var);
 
-      send_actions({chain::action{accountPermissions, N(eosio.msig), N(propose), variant_to_bin( N(eosio.msig), N(propose), args ) }});
+      send_actions({chain::action{accountPermissions, config::msig_account_name, N(propose), variant_to_bin( config::msig_account_name, N(propose), args ) }});
    });
 
 
@@ -3627,7 +3627,7 @@ int main( int argc, char** argv ) {
 
    review->set_callback([&] {
       const auto result1 = call(get_table_func, fc::mutable_variant_object("json", true)
-                                 ("code", "eosio.msig")
+                                 ("code", config::msig_account_name.to_string())
                                  ("scope", proposer)
                                  ("table", "proposal")
                                  ("table_key", "")
@@ -3663,7 +3663,7 @@ int main( int argc, char** argv ) {
 
          try {
             const auto& result2 = call(get_table_func, fc::mutable_variant_object("json", true)
-                                       ("code", "eosio.msig")
+                                       ("code", config::msig_account_name.to_string())
                                        ("scope", proposer)
                                        ("table", "approvals2")
                                        ("table_key", "")
@@ -3695,7 +3695,7 @@ int main( int argc, char** argv ) {
             }
          } else {
             const auto result3 = call(get_table_func, fc::mutable_variant_object("json", true)
-                                       ("code", "eosio.msig")
+                                       ("code", config::msig_account_name.to_string())
                                        ("scope", proposer)
                                        ("table", "approvals")
                                        ("table_key", "")
@@ -3831,7 +3831,7 @@ int main( int argc, char** argv ) {
       }
 
       auto accountPermissions = get_account_permissions(tx_permission, {name(proposer), config::active_name});
-      send_actions({chain::action{accountPermissions, N(eosio.msig), name(action), variant_to_bin( N(eosio.msig), name(action), args ) }});
+      send_actions({chain::action{accountPermissions, config::msig_account_name, name(action), variant_to_bin( config::msig_account_name, name(action), args ) }});
    };
 
    // multisig approve
@@ -3861,7 +3861,7 @@ int main( int argc, char** argv ) {
          ("account", invalidator);
 
       auto accountPermissions = get_account_permissions(tx_permission, {name(invalidator), config::active_name});
-      send_actions({chain::action{accountPermissions, N(eosio.msig), N(invalidate), variant_to_bin( N(eosio.msig), N(invalidate), args ) }});
+      send_actions({chain::action{accountPermissions, config::msig_account_name, N(invalidate), variant_to_bin( config::msig_account_name, N(invalidate), args ) }});
    });
 
    // multisig cancel
@@ -3888,7 +3888,7 @@ int main( int argc, char** argv ) {
          ("proposal_name", proposal_name)
          ("canceler", canceler);
 
-      send_actions({chain::action{accountPermissions, N(eosio.msig), N(cancel), variant_to_bin( N(eosio.msig), N(cancel), args ) }});
+      send_actions({chain::action{accountPermissions, config::msig_account_name, N(cancel), variant_to_bin( config::msig_account_name, N(cancel), args ) }});
       }
    );
 
@@ -3917,7 +3917,7 @@ int main( int argc, char** argv ) {
          ("proposal_name", proposal_name)
          ("executer", executer);
 
-      send_actions({chain::action{accountPermissions, N(eosio.msig), N(exec), variant_to_bin( N(eosio.msig), N(exec), args ) }});
+      send_actions({chain::action{accountPermissions, config::msig_account_name, N(exec), variant_to_bin( config::msig_account_name, N(exec), args ) }});
       }
    );
 
@@ -3975,7 +3975,7 @@ int main( int argc, char** argv ) {
          ("emergency", bSet);
 
       auto accountPermissions = vector<permission_level>{{name(bp_name), config::active_name}};
-      send_actions({chain::action{accountPermissions, N(eosio), N(setemergency), variant_to_bin( chain::config::system_account_name, N(setemergency), args ) }});
+      send_actions({chain::action{accountPermissions, config::system_account_name, N(setemergency), variant_to_bin( chain::config::system_account_name, N(setemergency), args ) }});
    };
 
    auto setemergency = system->add_subcommand("setemergency", localized("Setting the status of the chain is an emergency"));

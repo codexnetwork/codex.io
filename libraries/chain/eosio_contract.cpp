@@ -46,7 +46,7 @@ void validate_authority_precondition( const apply_context& context, const author
       if( a.permission.permission == config::owner_name || a.permission.permission == config::active_name )
          continue; // account was already checked to exist, so its owner and active permissions should exist
 
-      if( a.permission.permission == config::eosio_code_name ) // virtual eosio.code permission does not really exist but is allowed
+      if( a.permission.permission == config::eosio_code_name ) // virtual {root}.code permission does not really exist but is allowed
          continue;
 
       try {
@@ -292,10 +292,8 @@ void apply_system_native_updateauth(apply_context& context) {
 
    // FIXME: need change use system config
    EOS_ASSERT(!update.permission.empty(), action_validate_exception, "Cannot create authority with empty name");
-   EOS_ASSERT( update.permission.to_string().find( "eosio." ) != 0, action_validate_exception,
-               "Permission names that start with 'eosio.' are reserved" );
-   EOS_ASSERT( update.permission.to_string().find( "force." ) != 0, action_validate_exception,
-               "Permission names that start with 'force.' are reserved" );
+   EOS_ASSERT( update.permission.to_string().find( config::system_account_root + "." ) != 0, action_validate_exception,
+               "Permission names that start with root account are reserved" );
    EOS_ASSERT(update.permission != update.parent, action_validate_exception, "Cannot set an authority as its own parent");
    db.get<account_object, by_name>(update.account);
    EOS_ASSERT(validate(update.auth), action_validate_exception,
@@ -468,7 +466,7 @@ void apply_system_native_setconfig(apply_context& context) {
    auto cfg_data = context.get_action().data_as<setconfig>();
    if( !( context.has_authorization(config::chain_config_name)
        || context.has_authorization(config::producers_account_name))) {
-      EOS_THROW(missing_auth_exception, "setconfig need auth by eosio.prods");
+      EOS_THROW(missing_auth_exception, "setconfig need auth by prods");
       return;
    } 
    

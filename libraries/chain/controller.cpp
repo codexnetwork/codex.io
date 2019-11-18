@@ -315,7 +315,6 @@ struct controller_impl {
     wasmif( cfg.wasm_runtime, cfg.eosvmoc_tierup, db, cfg.state_dir, cfg.eosvmoc_config ),
     resource_limits( db ),
     authorization( s, db ),
-    txfee(),
     protocol_features( std::move(pfs) ),
     conf( cfg ),
     chain_id( chain_id ),

@@ -1436,9 +1436,8 @@ struct controller_impl {
          //action check
          check_action(dtrx.actions);
          trx_context.init_for_deferred_trx( gtrx.published );
-#if RESOURCE_MODEL == RESOURCE_MODEL_FEE
          trx_context.set_fee_ctx();
-#endif
+
          if( trx_context.enforce_whiteblacklist && pending->_block_status == controller::block_status::incomplete ) {
             flat_set<account_name> actors;
             for( const auto& act : trx_context.trx.actions ) {
@@ -1729,11 +1728,11 @@ struct controller_impl {
                        false
                );
             }
-#if RESOURCE_MODEL == RESOURCE_MODEL_FEE
+
             if( !trx->implicit ) {
                trx_context.set_fee_ctx();
             }
-#endif
+
             trx_context.exec();
             trx_context.finalize(); // Automatically rounds up network and CPU usage in trace and bills payers if successful
 

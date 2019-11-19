@@ -51,11 +51,16 @@ namespace eosio { namespace chain {
 
          // set_fee_ctx insert onfee act in trx
          inline void set_fee_ctx( const asset& fee_limit = asset{0} ) {
+            // if `RESOURCE_MODEL` is not RESOURCE_MODEL_FEE no process fee ctx
+            #if RESOURCE_MODEL == RESOURCE_MODEL_FEE
+
             EOS_ASSERT(!trx.actions[0].authorization.empty(), transaction_exception, "authorization empty");
             // TODO By CodexIO: can let other account to pay fee
             fee_payer = trx.actions[0].authorization[0].actor;
             max_fee_to_pay = fee_limit; // it will work in next version
             EOS_ASSERT(fee_payer != name{}, transaction_exception, "fee_payer shound not nil");
+
+            #endif
          }
 
          void exec();

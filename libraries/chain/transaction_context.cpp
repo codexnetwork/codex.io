@@ -302,20 +302,27 @@ namespace eosio { namespace chain {
             ("cpus", cpu_limit_by_contract)("nets", net_limit_by_contract));
       */
    }
+
    void transaction_context::process_fee_cost( const action& act ){
       if(    ( fee_payer != name{} )
           && ( (act.account != config::token_account_name) || (act.name != config::action::fee_name) ) ) {
          const auto fee = control.get_txfee_manager().get_required_fee(control, act);
-         fee_costed += fee; // TODO : Check fee is > fee_limit
+         fee_costed += fee;
+         EOS_ASSERT( (max_fee_to_pay == asset{0}) || (fee_costed <= max_fee_to_pay), 
+                     transaction_exception, "fee costed more then limit" );
          add_limit_by_fee(act);
       }
    }
 
    void transaction_context::schedule_fee_action() {
       // if fee_payer is nil, it is mean now is not pay fee by action
-      if( fee_payer != name{} ) {
-         if(max_fee_to_pay != asset{0}) {
-            EOS_ASSERT(fee_costed <= max_fee_to_pay, transaction_exception, "fee costed more then limit");
+      if( (fee_payer != name{}) && (fee_costed != asset{0}) ) {
+         EOS_ASSERT( (max_fee_to_pay == asset{0}) || (fee_costed <= max_fee_to_pay), 
+                     transaction_exception, "fee costed more then limit" );
+
+         // at net genesis token not exist, so it need no fee
+         if( fee_payer == config::system_account_name ){
+            return;
          }
 
          const auto fee_action_ordinal = schedule_action( action{

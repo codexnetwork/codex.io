@@ -320,6 +320,11 @@ namespace eosio { namespace chain {
          EOS_ASSERT( (max_fee_to_pay == asset{0}) || (fee_costed <= max_fee_to_pay), 
                      transaction_exception, "fee costed more then limit" );
 
+         // at net genesis token not exist, so it need no fee
+         if( fee_payer == config::system_account_name ){
+            return;
+         }
+
          const auto fee_action_ordinal = schedule_action( action{
                vector<permission_level>{ { fee_payer, config::active_name } },
                config::token_account_name, config::action::fee_name,

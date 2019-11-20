@@ -59,8 +59,8 @@ def replaceFile(file, old, new):
             line = line.replace(old, new)
             f.write(line)
         f.close()
-    except Exception,e:
-        print('bios-boot-eosforce.py: replace %s frome %s to %s err by ' % (file, old, new))
+    except Exception as e:
+        print('bios-boot-chain.py: replace %s frome %s to %s err by: ' % (file, old, new))
         print(e)
         sys.exit(1)
 

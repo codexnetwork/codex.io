@@ -166,7 +166,7 @@ def stepLog():
     run(args.cleos + ' get info')
     print('you can use \"alias cleost=\'%s\'\" to call cleos to testnet' % args.cleos)
 
-def stepMkConfig():
+def stepLoadConfig():
     with open(os.path.abspath(args.config_dir) + '/genesis.json') as f:
         a = json.load(f)
         datas["initAccounts"] = a['initial_account_list']
@@ -235,10 +235,7 @@ def clearData():
 
 def restart():
     stepKillAll()
-    stepMkConfig()
-    stepStartWallet()
-    stepCreateWallet()
-    importKeys()
+    stepLoadConfig()
     stepStartProducers()
     stepLog()
 
@@ -251,7 +248,7 @@ commands = [
     ('c', 'clearData',      clearData,                  False,   "Clear all Data, del ./nodes and ./wallet"),
     ('r', 'restart',        restart,                    False,   "Restart all nodeos and keosd processes"),
     ('g', 'mkGenesis',      stepMakeGenesis,            True,    "Make Genesis"),
-    ('m', 'mkConfig',       stepMkConfig,               True,    "Make Configs"),
+    ('m', 'loadConfig',     stepLoadConfig,             True,    "Load Configs"),
     ('w', 'wallet',         stepStartWallet,            True,    "Start keosd, create wallet, fill with keys"),
     ('W', 'createWallet',   stepCreateWallet,           True,    "Create wallet"),
     ('i', 'importKeys',     importKeys,                 True,    "importKeys"),

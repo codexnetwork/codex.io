@@ -24,15 +24,15 @@ def jsonArg(a):
     return " '" + json.dumps(a) + "' "
 
 def run(args):
-    print('bios-boot-tutorial.py:', args)
+    print('bios-boot-chain.py:', args)
     logFile.write(args + '\n')
     if subprocess.call(args, shell=True):
-        print('bios-boot-eosforce.py: exiting because of error')
+        print('bios-boot-chain.py: exiting because of error')
         sys.exit(1)
 
 def retry(args):
     while True:
-        print('bios-boot-eosforce.py:', args)
+        print('bios-boot-chain.py:', args)
         logFile.write(args + '\n')
         if subprocess.call(args, shell=True):
             print('*** Retry')
@@ -40,7 +40,7 @@ def retry(args):
             break
 
 def background(args):
-    print('bios-boot-eosforce.py:', args)
+    print('bios-boot-chain.py:', args)
     logFile.write(args + '\n')
     return subprocess.Popen(args, shell=True)
 
@@ -59,8 +59,8 @@ def replaceFile(file, old, new):
             line = line.replace(old, new)
             f.write(line)
         f.close()
-    except Exception,e:
-        print('bios-boot-eosforce.py: replace %s frome %s to %s err by ' % (file, old, new))
+    except Exception as e:
+        print('bios-boot-chain.py: replace %s frome %s to %s err by: ' % (file, old, new))
         print(e)
         sys.exit(1)
 
@@ -75,22 +75,45 @@ def importKeys():
 def intToCurrency(i):
     return '%d.%04d %s' % (i // 10000, i % 10000, args.symbol)
 
-def createNodeDir(nodeIndex, bpaccount, key):
+def createNodeDir(nodeIndex, bpaccount, key, nodelen):
     dir = args.nodes_dir + ('%02d-' % nodeIndex) + bpaccount['name'] + '/'
     run('rm -rf ' + dir)
     run('mkdir -p ' + dir)
 
+    # data dir
+    run('mkdir -p ' + dir + 'datas/')
+    run('cp -r ' + args.config_dir + ' ' +  dir)
+
+    config_opts = ''.join(list(map(lambda i: ('p2p-peer-address = 127.0.0.1:%d\n' % (9001 + (nodeIndex + i) % nodelen )), range(6))))
+
+    config_opts += (
+        ('\n\nhttp-server-address = 127.0.0.1:%d\n' % (8000 + nodeIndex)) +
+        ('p2p-listen-endpoint = 127.0.0.1:%d\n\n\n' % (9000 + nodeIndex)) +
+        ('producer-name = %s\n' % (bpaccount['name'])) +
+        ('signature-provider=%s=KEY:%s\n' % ( bpaccount['bpkey'], key[1] )) +
+        'plugin = eosio::chain_api_plugin\n' +
+        'plugin = eosio::history_plugin\n' +
+        'plugin = eosio::history_api_plugin\n' +
+        'plugin = eosio::producer_plugin\n' +
+        'plugin = eosio::producer_api_plugin\n' +
+        'plugin = eosio::http_plugin\n\n\n' +
+        'contracts-console = true\n' +
+        ('max-clients = %d\n' % (datas["maxClients"])) +
+        'p2p-max-nodes-per-host = 64\n' +
+        'enable-stale-production = true\n' +
+        'filter-on=*\n\n\n'
+    )
+
+    # config files
+    with open(dir + 'config/config.ini', mode='w') as f:
+        f.write(config_opts)
+
 def createNodeDirs(inits, keys):
     for i in range(0, len(inits)):
-        createNodeDir(i + 1, datas["initProducers"][i], keys[i])
+        createNodeDir(i + 1, datas["initProducers"][i], keys[i], len(inits))
 
 def startNode(nodeIndex, bpaccount, key):
     dir = args.nodes_dir + ('%02d-' % nodeIndex) + bpaccount['name'] + '/'
-    otherOpts = ''.join(list(map(lambda i: '    --p2p-peer-address 127.0.0.1:' + str(9001 + i), range(nodeIndex - 1))))
-    if not nodeIndex: otherOpts += (
-        '    --plugin eosio::history_plugin'
-        '    --plugin eosio::history_api_plugin'
-    )
 
 
     print('bpaccount ', bpaccount)
@@ -98,21 +121,9 @@ def startNode(nodeIndex, bpaccount, key):
 
     cmd = (
         args.nodeos +
-        '    --blocks-dir ' + os.path.abspath(dir) + '/blocks'
-        '    --config-dir ' + os.path.abspath(dir) + '/../../config'
-        '    --data-dir ' + os.path.abspath(dir) +
-        '    --http-server-address 0.0.0.0:' + str(8000 + nodeIndex) +
-        '    --p2p-listen-endpoint 0.0.0.0:' + str(9000 + nodeIndex) +
-        '    --max-clients ' + str(datas["maxClients"]) +
-        '    --p2p-max-nodes-per-host ' + str(datas["maxClients"]) +
-        '    --enable-stale-production'
-        '    --producer-name ' + bpaccount['name'] +
-        '    --signature-provider=' + bpaccount['bpkey'] + '=KEY:' + key[1] +
-        '    --contracts-console ' +
-        '    --plugin eosio::http_plugin' +
-        '    --plugin eosio::chain_api_plugin' +
-        '    --plugin eosio::producer_plugin' +
-        otherOpts)
+        '    --config-dir ' + os.path.abspath(dir) + '/config'
+        '    -d ' + os.path.abspath(dir) + '/datas'
+    )
     with open(dir + '../' + bpaccount['name'] + '.log', mode='w') as f:
         f.write(cmd + '\n\n')
     background(cmd + '    2>>' + dir + '../' + bpaccount['name'] + '.log')
@@ -138,6 +149,9 @@ def stepCreateWallet():
     run('mkdir -p ' + os.path.abspath(args.wallet_dir))
     run(args.cleos + 'wallet create --file ./pw')
 
+def stepActiveProtocolFeatures():
+    run('curl -X POST http://127.0.0.1:8001/v1/producer/schedule_protocol_feature_activations -d \'{"protocol_features_to_activate": ["0ec7e080177b2c02b278d5088611686b49d739925a92d9bfcacd7fc6b74053bd"]}\'')
+
 def stepStartProducers():
     startProducers(datas["initProducers"], datas["initProducerSigKeys"])
     sleep(7)
@@ -152,7 +166,7 @@ def stepLog():
     run(args.cleos + ' get info')
     print('you can use \"alias cleost=\'%s\'\" to call cleos to testnet' % args.cleos)
 
-def stepMkConfig():
+def stepLoadConfig():
     with open(os.path.abspath(args.config_dir) + '/genesis.json') as f:
         a = json.load(f)
         datas["initAccounts"] = a['initial_account_list']
@@ -182,20 +196,7 @@ def stepMakeGenesis():
     #replaceFile(os.path.abspath(args.config_dir) + "/genesis.json", "#PUB#", args.pr)
     #run('cp ./genesis-data/key.json ' + os.path.abspath(args.config_dir) + '/keys/')
     #run('cp ./genesis-data/sigkey.json ' + os.path.abspath(args.config_dir) + '/keys/')
-    run('''echo "## Notify Plugin
-plugin = eosio::notify_plugin
-# notify-filter-on = account:action
-notify-filter-on = b1:
-notify-filter-on = b1:transfer
-notify-filter-on = eosio:delegatebw
-# http endpoint for each action seen on the chain.
-notify-receive-url = http://127.0.0.1:8080/notify
-# Age limit in seconds for blocks to send notifications. No age limit if set to negative.
-# Used to prevent old actions from trigger HTTP request while on replay (seconds)
-notify-age-limit = -1
-# Retry times of sending http notification if failed.
-notify-retry-times = 3" > ''' + os.path.abspath(args.config_dir) + '/config.ini')
-        
+
     run(args.root + 'build/programs/genesis/genesis')
     run('mv ./genesis.json ' + os.path.abspath(args.config_dir))
     run('mv ./activeacc.json ' + os.path.abspath(args.config_dir))
@@ -234,10 +235,7 @@ def clearData():
 
 def restart():
     stepKillAll()
-    stepMkConfig()
-    stepStartWallet()
-    stepCreateWallet()
-    importKeys()
+    stepLoadConfig()
     stepStartProducers()
     stepLog()
 
@@ -250,12 +248,13 @@ commands = [
     ('c', 'clearData',      clearData,                  False,   "Clear all Data, del ./nodes and ./wallet"),
     ('r', 'restart',        restart,                    False,   "Restart all nodeos and keosd processes"),
     ('g', 'mkGenesis',      stepMakeGenesis,            True,    "Make Genesis"),
-    ('m', 'mkConfig',       stepMkConfig,               True,    "Make Configs"),
+    ('m', 'loadConfig',     stepLoadConfig,             True,    "Load Configs"),
     ('w', 'wallet',         stepStartWallet,            True,    "Start keosd, create wallet, fill with keys"),
     ('W', 'createWallet',   stepCreateWallet,           True,    "Create wallet"),
     ('i', 'importKeys',     importKeys,                 True,    "importKeys"),
     ('D', 'createDirs',     stepCreateNodeDirs,         True,    "create dirs for node and log"),
     ('P', 'start-prod',     stepStartProducers,         True,    "Start producers"),
+    ('f', 'features',       stepActiveProtocolFeatures, True,    "Activite polotools features"),
     ('l', 'log',            stepLog,                    True,    "Show tail of node's log"),
 ]
 
@@ -302,4 +301,4 @@ for (flag, command, function, inAll, help) in commands:
             function()
 
 if not haveCommand:
-    print('bios-boot-eosforce.py: Tell me what to do. -a does almost everything. -h shows options.')
+    print('bios-boot-chain.py: Tell me what to do. -a does almost everything. -h shows options.')

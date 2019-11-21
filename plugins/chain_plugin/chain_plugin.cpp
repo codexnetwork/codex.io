@@ -21,7 +21,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include <fc/io/fstream.hpp>
 #include <fc/io/json.hpp>
 #include <fc/variant.hpp>
 #include <signal.h>
@@ -832,19 +831,7 @@ void chain_plugin::plugin_initialize(const variables_map& options) {
          wlog("The --import-reversible-blocks option should be used by itself.");
       }
 
-      const auto config_path_root = app().config_dir();
-
-      const auto genesis_file = config_path_root / "genesis.json";
-      my->chain_config->genesis = fc::json::from_file(genesis_file).as<genesis_state>();
-
-      my->chain_config->system.load(config::system_account_name, config_path_root / "force.system");
-      my->chain_config->token.load(config::token_account_name, config_path_root / "force.token");
-      my->chain_config->msig.load(config::msig_account_name, config_path_root / "force.msig");
-
-
-      // some config need change
-      my->chain_config->genesis.initial_configuration.max_block_cpu_usage = 1000000;
-      my->chain_config->genesis.initial_configuration.max_transaction_cpu_usage = 500000;
+      my->chain_config->genesis = fc::json::from_file( app().config_dir() / "genesis.json" ).as<genesis_state>();
 
       fc::optional<chain_id_type> chain_id;
       if (options.count( "snapshot" )) {

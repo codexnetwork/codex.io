@@ -77,15 +77,6 @@ namespace eosio { namespace chain {
       gmr_type_count
    };
 
-   struct system_contract {
-   public:
-      void load( const account_name& n, const boost::filesystem::path& config_path );
-
-      account_name name;
-      bytes code;
-      bytes abi;
-   };
-
    class controller {
       public:
          friend class memory_db;
@@ -117,10 +108,6 @@ namespace eosio { namespace chain {
             wasm_interface::vm_type  wasm_runtime = chain::config::default_wasm_runtime;
             eosvmoc::config          eosvmoc_config;
             bool                     eosvmoc_tierup         = false;
-
-            system_contract system;
-            system_contract token;
-            system_contract msig;
 
             genesis_state genesis;
 
@@ -398,11 +385,6 @@ namespace eosio { namespace chain {
 
 } }  /// eosio::chain
 
-FC_REFLECT( eosio::chain::system_contract,
-            (name)
-            (code)
-            (abi))
-
 FC_REFLECT( eosio::chain::controller::config,
             (actor_whitelist)
             (actor_blacklist)
@@ -418,9 +400,6 @@ FC_REFLECT( eosio::chain::controller::config,
             (contracts_console)
             (wasm_runtime)
             (genesis)
-            (token)
-            (system)
-            (msig)
             (resource_greylist)
             (trusted_producers)
           )

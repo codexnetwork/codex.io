@@ -18,7 +18,14 @@ datas = {
       'maxClients':0
 }
 
-unlockTimeout = 999999999
+publickey = "7R82SaGaJubv23GwXHyKT4qDCVXi66qkQrnjwmBUvdA4dyzEPG"
+privatekey = "5JfjatHRwbmY8SfptFRxHnYUctfnuaxANTGDYUtkfrrBDgkh3hB"
+unlockTimeout = 3600*24
+
+root_account = "codex"
+
+def systemAccount(sub_name):
+    return root_account + "." + sub_name
 
 def jsonArg(a):
     return " '" + json.dumps(a) + "' "
@@ -38,6 +45,22 @@ def retry(args):
             print('*** Retry')
         else:
             break
+
+def cleos(cmd):
+    run(args.cleos + cmd)
+
+def createAccountByRoot( account, ownerkey, activekey ):
+    cleos('create account %s %s %s %s' % (root_account, account, ownerkey, activekey))
+
+def setContractByPath(account, path):
+    cleos('set contract %s %s/' % (account, path))
+
+def mkContractAccount(account, key, path, createAccount=True):
+    print('make account contract %s' % (account))
+    if createAccount:
+        createAccountByRoot(account, key, key)
+    setContractByPath(account, path)
+    sleep(1)
 
 def background(args):
     print('bios-boot-chain.py:', args)
@@ -65,6 +88,7 @@ def replaceFile(file, old, new):
         sys.exit(1)
 
 def importKeys():
+    cleos('wallet import --private-key ' + privatekey)
     keys = {}
     for a in datas["initAccountsKeys"]:
         key = a[1]
@@ -216,6 +240,11 @@ def stepSetFuncs():
 
     # some config to set
     print('stepSetFuncs')
+    sleep(8)
+    key = args.pr + publickey
+    mkContractAccount( root_account, key, args.contracts_dir + '/force.system/', False )
+    mkContractAccount( systemAccount('token'), key, args.contracts_dir + '/force.token/' )
+    mkContractAccount( systemAccount('msig'), key, args.contracts_dir + '/force.msig/' )
 
 def clearData():
     stepKillAll()
@@ -252,7 +281,7 @@ commands = [
 ]
 
 parser.add_argument('--root', metavar='', help="Eosforce root dir from git", default='../../')
-parser.add_argument('--contracts-dir', metavar='', help="Path to contracts directory", default='build/contracts/')
+parser.add_argument('--contracts-dir', metavar='', help="Path to contracts directory", default='tutorials/genesis')
 parser.add_argument('--cleos', metavar='', help="Cleos command", default='build/programs/cleos/cleos --wallet-url http://127.0.0.1:6666 ')
 parser.add_argument('--nodeos', metavar='', help="Path to nodeos binary", default='build/programs/nodeos/nodeos')
 parser.add_argument('--nodes-dir', metavar='', help="Path to nodes directory", default='./nodes/')
